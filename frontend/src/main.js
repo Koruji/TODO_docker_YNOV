@@ -1,8 +1,42 @@
+import '@fontsource-variable/lexend'
+import '@fontsource-variable/nunito-sans'
 import './style.css'
+import { api, session, messageFor } from './api.js'
 
 let user = null
 
 const app = document.querySelector('#app')
+
+const escapeHtml = (str) =>
+  String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+
+async function submitForm(form, action) {
+  const button = form.querySelector('button[type="submit"]')
+  const label = button.textContent
+  const alert = form.querySelector('.alert')
+
+  alert.hidden = true
+  form.querySelectorAll('.field-error').forEach((el) => el.remove())
+  form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'))
+
+  button.disabled = true
+  button.textContent = 'Un instant…'
+  try {
+    await action()
+  } catch (err) {
+    alert.textContent = messageFor(err)
+    alert.hidden = false
+    for (const [name, message] of Object.entries(err.fields ?? {})) {
+      const input = form.elements[name]
+      if (!input) continue
+      input.setAttribute('aria-invalid', 'true')
+      input.insertAdjacentHTML('afterend', `<p class="field-error">${escapeHtml(message)}</p>`)
+    }
+  } finally {
+    button.disabled = false
+    button.textContent = label
+  }
+}
 
 const logo = `
   <div class="brand">
@@ -16,7 +50,7 @@ function field({ id, label, type = 'text', autocomplete, hint = '' }) {
   return `
     <div class="field">
       <label for="${id}">${label}</label>
-      <input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}" required />
+      <input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}" autocapitalize="none" spellcheck="false" required />
       ${hint ? `<p class="hint">${hint}</p>` : ''}
     </div>`
 }
@@ -43,6 +77,7 @@ function authShell(active, title, subtitle, form) {
 function loginView() {
   app.innerHTML = authShell('login', 'Bon retour 👋', 'Connecte-toi pour retrouver tes tâches.', `
     <form id="login-form" class="form" novalidate>
+      <div class="alert" role="alert" hidden></div>
       ${field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' })}
       ${field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'current-password' })}
       <button type="submit" class="btn btn-primary">Se connecter</button>
@@ -51,15 +86,18 @@ function loginView() {
 
   document.querySelector('#login-form').addEventListener('submit', (e) => {
     e.preventDefault()
-    const email = e.target.email.value.trim()
-    user = { username: email.split('@')[0] || 'toi', email }
-    location.hash = '#/home'
+    const form = e.target
+    submitForm(form, async () => {
+      user = await api.login(form.elements.email.value.trim(), form.elements.password.value)
+      location.hash = '#/home'
+    })
   })
 }
 
 function registerView() {
   app.innerHTML = authShell('register', 'Crée ton profil', 'Quelques secondes suffisent pour commencer.', `
     <form id="register-form" class="form" novalidate>
+      <div class="alert" role="alert" hidden></div>
       ${field({ id: 'username', label: "Nom d'utilisateur", autocomplete: 'username' })}
       ${field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' })}
       ${field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'new-password', hint: '8 caractères minimum' })}
@@ -69,25 +107,29 @@ function registerView() {
 
   document.querySelector('#register-form').addEventListener('submit', (e) => {
     e.preventDefault()
-    user = { username: e.target.username.value.trim() || 'toi', email: e.target.email.value.trim() }
-    location.hash = '#/home'
+    const form = e.target
+    submitForm(form, async () => {
+      user = await api.register(form.elements.username.value.trim(), form.elements.email.value.trim(), form.elements.password.value)
+      location.hash = '#/home'
+    })
   })
 }
 
 function homeView() {
-  const initial = user.username.charAt(0).toUpperCase()
+  const name = escapeHtml(user.username)
+  const initial = escapeHtml(user.username.charAt(0).toUpperCase())
   app.innerHTML = `
     <header class="topbar">
       ${logo}
       <div class="topbar-user">
         <span class="avatar" aria-hidden="true">${initial}</span>
-        <span class="topbar-name">${user.username}</span>
+        <span class="topbar-name">${name}</span>
         <button id="logout" type="button" class="btn btn-ghost">Se déconnecter</button>
       </div>
     </header>
 
     <main class="home">
-      <h1>Bonjour ${user.username} 👋</h1>
+      <h1>Bonjour ${name} 👋</h1>
       <p class="subtitle">Te voilà connecté.</p>
 
       <div class="empty">
@@ -100,6 +142,7 @@ function homeView() {
     </main>`
 
   document.querySelector('#logout').addEventListener('click', () => {
+    session.clear()
     user = null
     location.hash = '#/login'
   })
@@ -116,4 +159,18 @@ function render() {
 }
 
 window.addEventListener('hashchange', render)
-render()
+
+async function boot() {
+  const saved = session.get()
+  if (saved) {
+    try {
+      user = await api.me()
+    } catch (err) {
+      if (err.status === 0) user = saved.user 
+      else session.clear()
+    }
+  }
+  render()
+}
+
+boot()

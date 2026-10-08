@@ -1,4 +1,7 @@
 spring:
+  web:
+    locale: fr
+    locale-resolver: fixed
   application:
     name: backend
   datasource:
