@@ -48,7 +48,7 @@ public class UserService {
     public UserDto update(Long userId, UserUpdateRequest request) {
         Users user = getUser(userId);
 
-       if (!user.getUsername().equals(request.username())
+        if (!user.getUsername().equals(request.username())
                 && usersRepository.existsByUsername(request.username())) {
             throw new ConflictException("Username already taken");
         }

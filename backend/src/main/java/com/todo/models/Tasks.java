@@ -2,7 +2,6 @@ package com.todo.models;
 import java.time.LocalDate;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 
 @Entity 
 @Table(name = "tasks")
@@ -26,8 +25,6 @@ public class Tasks {
     @Column(length = 255)
     private String place;
 
-    @Min(0)
-    @Max(3)
     private Integer level;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

@@ -14,6 +14,6 @@ spring:
 
 app:
   jwt:
-    # HS256 : au moins 32 caractères. À surcharger via JWT_SECRET hors développement.
-    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    # HS256 : au moins 32 caractères, obligatoire (variable d'environnement JWT_SECRET)
+    secret: ${JWT_SECRET}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
