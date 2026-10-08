@@ -11,3 +11,11 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+  cors:
+    # Origines autorisées, séparées par des virgules (Vite : 5173)
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
