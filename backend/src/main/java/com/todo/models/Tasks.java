@@ -28,7 +28,6 @@ public class Tasks {
 
     @Min(0)
     @Max(3)
-    @Column
     private Integer level;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
