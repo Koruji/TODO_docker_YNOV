@@ -1,60 +1,119 @@
 import './style.css'
-import heroImg from './assets/hero.png'
-import javascriptLogo from './assets/javascript.svg'
-import viteLogo from './assets/vite.svg'
-import { setupCounter } from './counter.js'
 
-document.querySelector('#app').innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${javascriptLogo}" class="framework" alt="JavaScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.js</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+let user = null
 
-<div class="ticks"></div>
+const app = document.querySelector('#app')
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-          <img class="button-icon" src="${javascriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+const logo = `
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+    </span>
+    <span class="brand-name">TODO</span>
+  </div>`
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+function field({ id, label, type = 'text', autocomplete, hint = '' }) {
+  return `
+    <div class="field">
+      <label for="${id}">${label}</label>
+      <input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}" required />
+      ${hint ? `<p class="hint">${hint}</p>` : ''}
+    </div>`
+}
 
-setupCounter(document.querySelector('#counter'))
+function authShell(active, title, subtitle, form) {
+  return `
+    <main class="auth">
+      <section class="auth-card">
+        ${logo}
+        <h1>${title}</h1>
+        <p class="subtitle">${subtitle}</p>
+
+        <nav class="tabs" aria-label="Authentification">
+          <a href="#/login" class="${active === 'login' ? 'active' : ''}" ${active === 'login' ? 'aria-current="page"' : ''}>Connexion</a>
+          <a href="#/register" class="${active === 'register' ? 'active' : ''}" ${active === 'register' ? 'aria-current="page"' : ''}>Créer un compte</a>
+        </nav>
+
+        ${form}
+      </section>
+      <p class="auth-footer">Organise tes tâches, seul ou à plusieurs.</p>
+    </main>`
+}
+
+function loginView() {
+  app.innerHTML = authShell('login', 'Bon retour 👋', 'Connecte-toi pour retrouver tes tâches.', `
+    <form id="login-form" class="form" novalidate>
+      ${field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' })}
+      ${field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'current-password' })}
+      <button type="submit" class="btn btn-primary">Se connecter</button>
+    </form>
+    <p class="switch">Pas encore de compte ? <a href="#/register">Créer un compte</a></p>`)
+
+  document.querySelector('#login-form').addEventListener('submit', (e) => {
+    e.preventDefault()
+    const email = e.target.email.value.trim()
+    user = { username: email.split('@')[0] || 'toi', email }
+    location.hash = '#/home'
+  })
+}
+
+function registerView() {
+  app.innerHTML = authShell('register', 'Crée ton profil', 'Quelques secondes suffisent pour commencer.', `
+    <form id="register-form" class="form" novalidate>
+      ${field({ id: 'username', label: "Nom d'utilisateur", autocomplete: 'username' })}
+      ${field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' })}
+      ${field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'new-password', hint: '8 caractères minimum' })}
+      <button type="submit" class="btn btn-primary">Créer mon compte</button>
+    </form>
+    <p class="switch">Déjà inscrit ? <a href="#/login">Se connecter</a></p>`)
+
+  document.querySelector('#register-form').addEventListener('submit', (e) => {
+    e.preventDefault()
+    user = { username: e.target.username.value.trim() || 'toi', email: e.target.email.value.trim() }
+    location.hash = '#/home'
+  })
+}
+
+function homeView() {
+  const initial = user.username.charAt(0).toUpperCase()
+  app.innerHTML = `
+    <header class="topbar">
+      ${logo}
+      <div class="topbar-user">
+        <span class="avatar" aria-hidden="true">${initial}</span>
+        <span class="topbar-name">${user.username}</span>
+        <button id="logout" type="button" class="btn btn-ghost">Se déconnecter</button>
+      </div>
+    </header>
+
+    <main class="home">
+      <h1>Bonjour ${user.username} 👋</h1>
+      <p class="subtitle">Te voilà connecté.</p>
+
+      <div class="empty">
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
+        </div>
+        <h2>Aucune tâche pour le moment</h2>
+        <p>Tes tâches apparaîtront ici dès qu'on aura construit cet écran.</p>
+      </div>
+    </main>`
+
+  document.querySelector('#logout').addEventListener('click', () => {
+    user = null
+    location.hash = '#/login'
+  })
+}
+
+function render() {
+  const route = location.hash.replace('#', '') || '/login'
+  if (route === '/home') {
+    if (!user) return void (location.hash = '#/login')
+    return homeView()
+  }
+  if (user) return void (location.hash = '#/home')
+  return route === '/register' ? registerView() : loginView()
+}
+
+window.addEventListener('hashchange', render)
+render()
