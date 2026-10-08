@@ -11,3 +11,9 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+
+app:
+  jwt:
+    # HS256 : au moins 32 caractères. À surcharger via JWT_SECRET hors développement.
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
