@@ -29,6 +29,8 @@
   --danger-soft: rgba(179, 38, 30, 0.07);
   --shadow: 0 1px 2px rgba(31, 41, 22, 0.06), 0 12px 32px -8px rgba(31, 41, 22, 0.18);
   --shadow-sm: 0 1px 3px rgba(31, 41, 22, 0.16);
+  --carve-dark: rgba(92, 110, 69, 0.38);
+  --carve-light: rgba(255, 255, 255, 0.85);
 
   /* Titres : Lexend. Sous-titres et texte courant : Nunito Sans (graisse 400, 600 pour l'emphase) */
   --font-heading: 'Lexend Variable', system-ui, sans-serif;
@@ -67,96 +69,103 @@ a:hover { text-decoration: underline; }
 
 /* ---------- Mobile d'abord : ce qui suit est le style de base (petit écran) ---------- */
 
-/* Marque */
-.brand { display: inline-flex; align-items: center; gap: 0.6rem; }
-.brand-mark {
-  display: grid; place-items: center; flex: none;
-  width: 2.25rem; height: 2.25rem; border-radius: 10px;
-  background: var(--accent); color: var(--on-accent);
-}
-.brand-mark svg { width: 1.2rem; height: 1.2rem; }
-.brand-name {
-  display: none; /* très petit écran (< 360px) : le logo seul suffit */
-  font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; letter-spacing: 0.06em; color: var(--text-h);
-}
-
-/* Écrans connexion / inscription */
+/* Écrans connexion / inscription : pas de carte, un décor qui respire et des champs creusés dans le fond */
+.auth, .page { position: relative; overflow: hidden; isolation: isolate; min-height: 100vh; min-height: 100dvh; }
 .auth {
-  min-height: 100vh; min-height: 100dvh;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1rem;
-  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
-           max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  display: flex; align-items: center; justify-content: center;
+  padding: max(1.5rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+           max(1.5rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
 }
-.auth-card {
-  width: 100%; max-width: 26rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-  padding: 1.5rem 1.25rem;
-}
-.auth-card h1 { font-size: 1.5rem; margin-top: 1.25rem; }
-.subtitle { margin: 0.5rem 0 0; font-size: 1rem; font-weight: 400; }
-.auth-footer { margin: 0; font-size: 0.9rem; text-align: center; }
 
-.tabs {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem;
-  margin: 1.25rem 0 1.25rem; padding: 0.25rem;
-  background: var(--tint); border-radius: 12px;
+.ambient {
+  position: absolute; inset: -2rem; z-index: -1; pointer-events: none;
+  transform: translate(var(--px, 0), var(--py, 0));
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.tabs a {
-  display: flex; align-items: center; justify-content: center; text-align: center;
-  min-height: 2.75rem; padding: 0.4rem 0.5rem; border-radius: 9px; /* cible tactile >= 44px */
-  color: var(--text); font-size: 0.93rem; font-weight: 600;
+.blob { position: absolute; border-radius: 50%; filter: blur(44px); will-change: transform; }
+.blob-1 { width: 26rem; height: 26rem; top: -7rem; left: -9rem; background: var(--sage-100); opacity: 0.8; animation: drift-a 26s ease-in-out infinite alternate; }
+.blob-2 { width: 22rem; height: 22rem; bottom: -8rem; right: -7rem; background: var(--sage-200); opacity: 0.55; animation: drift-b 32s ease-in-out infinite alternate; }
+.blob-3 { width: 14rem; height: 14rem; top: 46%; right: 8%; background: var(--sage-300); opacity: 0.25; animation: drift-a 38s ease-in-out infinite alternate-reverse; }
+
+/* Halo central : sa respiration (inspire / expire) est volontairement lente */
+.orb {
+  position: absolute; top: 50%; left: 50%;
+  width: min(36rem, 130vw); aspect-ratio: 1; margin: calc(min(36rem, 130vw) / -2) 0 0 calc(min(36rem, 130vw) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 252, 243, 0.95) 0%, rgba(233, 245, 219, 0.8) 42%, rgba(207, 225, 185, 0) 70%);
+  animation: breathe 8s ease-in-out infinite;
 }
-.tabs a:hover { text-decoration: none; color: var(--text-h); }
-.tabs a.active { background: var(--cream-light); color: var(--text-h); box-shadow: var(--shadow-sm); }
+.auth.busy .orb { animation-duration: 3s; } /* appel en cours : le rythme s'accélère un peu */
+
+@keyframes breathe { 0%, 100% { transform: scale(0.94); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
+@keyframes drift-a { from { transform: translate(0, 0) scale(1); } to { transform: translate(4rem, 3rem) scale(1.12); } }
+@keyframes drift-b { from { transform: translate(0, 0) scale(1.05); } to { transform: translate(-4rem, -3rem) scale(0.95); } }
+
+.auth-card { width: 100%; max-width: 21rem; text-align: center; }
+.auth-card h1 { font-size: 1.6rem; font-weight: 500; letter-spacing: 0.14em; margin: 0 0 2rem; }
+.auth-card .field { text-align: left; }
+.switch a { color: var(--sage-700); }
 
 /* Erreurs */
 .alert {
-  padding: 0.7rem 0.9rem; border-radius: 10px; font-size: 0.92rem; font-weight: 600;
+  padding: 0.7rem 1.1rem; border-radius: 18px; font-size: 0.92rem; font-weight: 600;
   color: var(--danger); background: var(--danger-soft); border: 1px solid var(--danger);
 }
 .alert[hidden] { display: none; }
-.field-error { margin: 0; font-size: 0.85rem; color: var(--danger); }
+.field-error { margin: 0; font-size: 0.85rem; color: var(--danger); padding-left: 1.25rem; }
 .field input[aria-invalid='true'] { border-color: var(--danger); }
 .btn:disabled { opacity: 0.6; cursor: progress; }
 
 /* Formulaires */
 .form { display: grid; gap: 1rem; }
 .field { display: grid; gap: 0.35rem; }
-.field label { font-size: 0.9rem; font-weight: 600; color: var(--text-h); }
+.field label { font-size: 0.9rem; font-weight: 600; color: var(--text-h); padding-left: 1.25rem; }
 .field input {
-  width: 100%; min-height: 3rem; padding: 0.7rem 0.85rem;
+  width: 100%; min-height: 3rem; padding: 0.7rem 1.25rem;
   font: inherit; font-size: 1rem; /* 16px minimum : sinon iOS zoome sur le champ */
   color: var(--text-h);
-  background: var(--cream-light); border: 1px solid var(--field-border); border-radius: 10px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  background: rgba(255, 252, 243, 0.6);
+  border: 1px solid var(--field-border); border-radius: 999px;
+  box-shadow: inset 3px 3px 7px var(--carve-dark), inset -3px -3px 7px var(--carve-light);
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
 }
-.field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-.hint { margin: 0; font-size: 0.85rem; }
+.field input:focus {
+  outline: none; border-color: var(--accent); background: var(--cream-light);
+  box-shadow: inset 3px 3px 7px var(--carve-dark), inset -3px -3px 7px var(--carve-light), 0 0 0 5px var(--accent-soft);
+}
+.hint { margin: 0; font-size: 0.85rem; padding-left: 1.25rem; }
 
 .btn {
   font: inherit; font-weight: 700; cursor: pointer;
-  min-height: 2.75rem; padding: 0.7rem 1.1rem; border-radius: 10px; border: 1px solid transparent;
+  min-height: 2.75rem; padding: 0.7rem 1.4rem; border-radius: 999px; border: 1px solid transparent;
   transition: background 0.15s, border-color 0.15s, transform 0.05s;
 }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--accent); color: var(--on-accent); margin-top: 0.25rem; min-height: 3rem; }
-.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary {
+  background: var(--accent); color: var(--on-accent); margin-top: 0.5rem; min-height: 3rem;
+  box-shadow: 0 10px 22px -10px rgba(77, 93, 57, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 14px 28px -10px rgba(77, 93, 57, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
 .btn-ghost { background: transparent; color: var(--text-h); border-color: var(--field-border); padding: 0.5rem 0.9rem; white-space: nowrap; }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
 .switch { margin: 1.25rem 0 0; text-align: center; font-size: 0.93rem; }
 
-/* Page connectée */
+/* Page connectée : même décor qui respire, barre flottante, état vide creusé */
+.page { display: flex; flex-direction: column; }
+
 .topbar {
-  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-  padding: 0.6rem max(1rem, env(safe-area-inset-right)) 0.6rem max(1rem, env(safe-area-inset-left));
-  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; justify-content: flex-end;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
 }
-.topbar-user { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+.topbar-user {
+  display: flex; align-items: center; gap: 0.6rem; min-width: 0;
+  padding: 0.35rem 0.35rem 0.35rem 0.5rem;
+  background: rgba(255, 252, 243, 0.55);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-radius: 999px;
+  box-shadow: 0 10px 26px -14px rgba(77, 93, 57, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
 .topbar-name {
   display: none; /* masqué sur petit écran : l'avatar suffit */
   color: var(--text-h); font-weight: 600;
@@ -165,50 +174,48 @@ a:hover { text-decoration: underline; }
 .avatar {
   display: grid; place-items: center; flex: none;
   width: 2.25rem; height: 2.25rem; border-radius: 50%;
-  background: var(--tint); color: var(--accent); font-weight: 800;
+  background: var(--tint); color: var(--sage-700); font-weight: 700;
+  box-shadow: inset 2px 2px 5px var(--carve-dark), inset -2px -2px 5px var(--carve-light);
 }
 
-.home { max-width: 44rem; margin: 0 auto; padding: 1.5rem max(1rem, env(safe-area-inset-right)) 2rem max(1rem, env(safe-area-inset-left)); }
-.home h1 { font-size: 1.6rem; }
+.home {
+  flex: 1; width: 100%; max-width: 30rem; margin: 0 auto; text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem;
+  padding: 1rem max(1.25rem, env(safe-area-inset-right)) 4rem max(1.25rem, env(safe-area-inset-left));
+}
+.home h1 { font-size: clamp(1.5rem, 6vw, 2rem); font-weight: 500; letter-spacing: 0.08em; }
 
+/* État vide : un galet creusé dans le fond, dont l'icône respire au même rythme que le halo */
 .empty {
-  margin-top: 1.5rem; padding: 2rem 1rem; text-align: center;
-  background: var(--surface); border: 1px dashed var(--sage-300); border-radius: var(--radius);
+  width: 100%; max-width: 20rem; padding: 2.5rem 1.5rem;
+  background: rgba(255, 252, 243, 0.5);
+  border-radius: 2.25rem;
+  box-shadow: inset 6px 6px 14px var(--carve-dark), inset -6px -6px 14px var(--carve-light);
 }
 .empty-icon {
-  display: grid; place-items: center; margin: 0 auto 1rem;
-  width: 3.5rem; height: 3.5rem; border-radius: 16px;
-  background: var(--tint); color: var(--accent);
+  display: grid; place-items: center; margin: 0 auto 1.1rem;
+  width: 3.75rem; height: 3.75rem; border-radius: 50%;
+  background: var(--tint); color: var(--sage-700);
+  animation: breathe-soft 8s ease-in-out infinite;
 }
 .empty-icon svg { width: 1.7rem; height: 1.7rem; }
-.empty h2 { font-size: 1.1rem; }
-.empty p { margin: 0.4rem 0 0; }
+.empty h2 { font-size: 1.05rem; font-weight: 500; letter-spacing: 0.02em; }
+
+@keyframes breathe-soft { 0%, 100% { transform: scale(0.95); } 50% { transform: scale(1.05); } }
 
 /* ---------- Écrans plus larges : on enrichit ---------- */
 
-@media (min-width: 22.5rem) { /* 360px */
-  .brand-name { display: inline; }
-}
-
 @media (min-width: 30rem) { /* 480px */
-  .auth { gap: 1.25rem; }
-  .auth-card { padding: 2rem; border-radius: 20px; }
-  .auth-card h1 { font-size: 1.6rem; margin-top: 1.5rem; }
-  .subtitle { font-size: 1.05rem; }
-  .topbar { gap: 1rem; padding-top: 0.9rem; padding-bottom: 0.9rem; }
-  .topbar-user { gap: 0.75rem; }
+  .auth-card { max-width: 22rem; }
+  .topbar-user { gap: 0.75rem; padding-left: 0.5rem; }
   .topbar-name { display: block; }
   .btn-ghost { min-height: 2.5rem; padding: 0.5rem 0.9rem; }
-  .empty { padding: 3rem 1.5rem; }
 }
 
 @media (min-width: 48rem) { /* 768px */
-  .topbar { padding-left: clamp(1rem, 4vw, 2.5rem); padding-right: clamp(1rem, 4vw, 2.5rem); }
-  .home { padding-top: 3rem; padding-bottom: 3rem; }
-  .home h1 { font-size: clamp(1.8rem, 3vw, 2.1rem); }
-  .empty { margin-top: 2rem; }
+  .topbar { padding-top: 1.5rem; padding-left: clamp(1rem, 4vw, 2.5rem); padding-right: clamp(1rem, 4vw, 2.5rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
+  * { transition: none !important; animation: none !important; }
 }
