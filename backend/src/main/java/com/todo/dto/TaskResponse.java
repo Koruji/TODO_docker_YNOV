@@ -12,6 +12,7 @@ public record TaskResponse(
     LocalDate endDate,
     String place, 
     Integer level, 
+    boolean done,
     UserDto user,
     UserDto collaborator
 ) {
@@ -24,6 +25,7 @@ public record TaskResponse(
             t.getEndDate(),
             t.getPlace(),
             t.getLevel(),
+            t.isDone(),
             UserDto.from(t.getUser()),
             t.getCollaborator() == null ? null : UserDto.from(t.getCollaborator())
         );

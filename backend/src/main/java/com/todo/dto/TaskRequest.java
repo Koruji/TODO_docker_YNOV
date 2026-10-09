@@ -10,5 +10,6 @@ public record TaskRequest(
     LocalDate endDate,
     @Size(max = 255) String place,
     @Min(0) @Max(3) Integer level,
-    Long collaboratorId
+    Long collaboratorId,
+    Boolean done
 ) {}

@@ -70,6 +70,9 @@ public class TaskService {
         task.setPlace(request.place());
         task.setLevel(request.level());
         task.setCollaborator(findCollaborator(request.collaboratorId()));
+        if (request.done() != null) {
+            task.setDone(request.done());
+        }
     }
 
     private Users findCollaborator(Long collaboratorId) {

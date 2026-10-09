@@ -1,44 +1,21 @@
 import '@fontsource-variable/lexend'
 import '@fontsource-variable/nunito-sans'
 import './style.css'
-import { api, session, messageFor } from './api.js'
+import house from 'bootstrap-icons/icons/house.svg?raw'
+import houseFill from 'bootstrap-icons/icons/house-fill.svg?raw'
+import barChart from 'bootstrap-icons/icons/bar-chart.svg?raw'
+import barChartFill from 'bootstrap-icons/icons/bar-chart-fill.svg?raw'
+import calendar from 'bootstrap-icons/icons/calendar-week.svg?raw'
+import calendarFill from 'bootstrap-icons/icons/calendar-week-fill.svg?raw'
+import gear from 'bootstrap-icons/icons/gear.svg?raw'
+import gearFill from 'bootstrap-icons/icons/gear-fill.svg?raw'
+import { api, session } from './api.js'
+import { escapeHtml, submitForm } from './utils.js'
+import { mountMenu } from './tasks.js'
 
 let user = null
 
 const app = document.querySelector('#app')
-
-const escapeHtml = (str) =>
-  String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
-
-async function submitForm(form, action) {
-  const button = form.querySelector('button[type="submit"]')
-  const label = button.textContent
-  const alert = form.querySelector('.alert')
-
-  alert.hidden = true
-  form.querySelectorAll('.field-error').forEach((el) => el.remove())
-  form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'))
-
-  button.disabled = true
-  button.textContent = 'Un instant…'
-  form.closest('.auth')?.classList.add('busy')
-  try {
-    await action()
-  } catch (err) {
-    alert.textContent = messageFor(err)
-    alert.hidden = false
-    for (const [name, message] of Object.entries(err.fields ?? {})) {
-      const input = form.elements[name]
-      if (!input) continue
-      input.setAttribute('aria-invalid', 'true')
-      input.insertAdjacentHTML('afterend', `<p class="field-error">${escapeHtml(message)}</p>`)
-    }
-  } finally {
-    button.disabled = false
-    button.textContent = label
-    form.closest('.auth')?.classList.remove('busy')
-  }
-}
 
 const ambient = `
   <div class="ambient" aria-hidden="true">
@@ -83,7 +60,7 @@ function loginView() {
     const form = e.target
     submitForm(form, async () => {
       user = await api.login(form.elements.email.value.trim(), form.elements.password.value)
-      location.hash = '#/home'
+      location.hash = '#/menu'
     })
   })
 }
@@ -103,12 +80,44 @@ function registerView() {
     const form = e.target
     submitForm(form, async () => {
       user = await api.register(form.elements.username.value.trim(), form.elements.email.value.trim(), form.elements.password.value)
-      location.hash = '#/home'
+      location.hash = '#/menu'
     })
   })
 }
 
-function homeView() {
+const PAGES = [
+  { path: '/menu', label: 'Menu', icon: house, iconOn: houseFill },
+  { path: '/stats', label: 'Statistiques', icon: barChart, iconOn: barChartFill },
+  { path: '/calendar', label: 'Calendrier', icon: calendar, iconOn: calendarFill },
+  { path: '/settings', label: 'Paramètres', icon: gear, iconOn: gearFill },
+]
+
+const emptyState = (svg, text) => `
+  <div class="empty">
+    <div class="empty-icon" aria-hidden="true">${svg}</div>
+    <h2>${text}</h2>
+  </div>`
+
+const section = (title, svg, text) => `
+  <main class="home">
+    <h1>${title}</h1>
+    ${emptyState(svg, text)}
+  </main>`
+
+const VIEWS = {
+  '/menu': () => '<main class="home"></main>',
+  '/stats': () => section('Statistiques', barChart, 'Bientôt disponible'),
+  '/calendar': () => section('Calendrier', calendar, 'Bientôt disponible'),
+  '/settings': () => `
+    <main class="home">
+      <h1>Paramètres</h1>
+      <div class="settings">
+        <button id="logout" type="button" class="btn btn-danger">Se déconnecter</button>
+      </div>
+    </main>`,
+}
+
+function shellView() {
   const name = escapeHtml(user.username)
   const initial = escapeHtml(user.username.charAt(0).toUpperCase())
   app.innerHTML = `
@@ -119,40 +128,57 @@ function homeView() {
         <div class="topbar-user">
           <span class="avatar" aria-hidden="true">${initial}</span>
           <span class="topbar-name">${name}</span>
-          <button id="logout" type="button" class="btn btn-ghost">Se déconnecter</button>
         </div>
       </header>
 
-      <main class="home">
-        <h1>Bonjour ${name}</h1>
+      <div id="view"></div>
 
-        <div class="empty">
-          <div class="empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
-          </div>
-          <h2>Aucune tâche pour le moment</h2>
-        </div>
-      </main>
+      <nav class="dock" aria-label="Navigation principale">
+        <span class="dock-indicator" aria-hidden="true"></span>
+        ${PAGES.map((p) => `
+          <a href="#${p.path}" aria-label="${p.label}" title="${p.label}">
+            <span class="ic ic-off">${p.icon}</span><span class="ic ic-on">${p.iconOn}</span>
+          </a>`).join('')}
+      </nav>
     </div>`
 
-  document.querySelector('#logout').addEventListener('click', () => {
-    session.clear()
-    user = null
-    location.hash = '#/login'
+}
+
+function logout() {
+  session.clear()
+  user = null
+  location.hash = '#/login'
+}
+
+function pageView(path) {
+  if (!document.querySelector('.page')) shellView()
+
+  const index = PAGES.findIndex((p) => p.path === path)
+  const dock = document.querySelector('.dock')
+  dock.style.setProperty('--i', index)
+  dock.querySelectorAll('a').forEach((link, i) => {
+    if (i === index) link.setAttribute('aria-current', 'page')
+    else link.removeAttribute('aria-current')
   })
+
+  const view = document.querySelector('#view')
+  view.innerHTML = VIEWS[path]()
+  if (path === '/menu') mountMenu(view.querySelector('.home'), user)
+  if (path === '/settings') view.querySelector('#logout').addEventListener('click', logout)
 }
 
 function render() {
   const route = location.hash.replace('#', '') || '/login'
-  if (route === '/home') {
+  if (route === '/home') return void (location.hash = '#/menu')
+
+  if (PAGES.some((p) => p.path === route)) {
     if (!user) return void (location.hash = '#/login')
-    return homeView()
+    return pageView(route)
   }
-  if (user) return void (location.hash = '#/home')
+  if (user) return void (location.hash = '#/menu')
   return route === '/register' ? registerView() : loginView()
 }
 
-// Le décor se déplace très légèrement avec le pointeur (profondeur douce)
 if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
   let frame = 0
   window.addEventListener('pointermove', (e) => {
@@ -165,6 +191,11 @@ if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
     })
   })
 }
+
+window.addEventListener('session-expired', () => {
+  user = null
+  location.hash = '#/login'
+})
 
 window.addEventListener('hashchange', render)
 

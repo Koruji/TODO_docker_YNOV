@@ -27,6 +27,9 @@ public class Tasks {
 
     private Integer level;
 
+    @Column(nullable = false)
+    private boolean done = false;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
@@ -51,6 +54,7 @@ public class Tasks {
     public LocalDate getEndDate() { return endDate; }
     public String getPlace() { return place; }
     public Integer getLevel() { return level; }
+    public boolean isDone() { return done; }
     public Users getUser() { return user; }
     public Users getCollaborator() { return collaborator; }
 
@@ -60,6 +64,7 @@ public class Tasks {
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
     public void setPlace(String place) { this.place = place; }
     public void setLevel(Integer level) { this.level = level; }
+    public void setDone(boolean done) { this.done = done; }
     public void setUser(Users user) { this.user = user; }
     public void setCollaborator(Users collaborator) { this.collaborator = collaborator; }
 

@@ -46,6 +46,10 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
 
   const data = await res.json().catch(() => null)
   if (!res.ok) {
+    if (auth && res.status === 401) {
+      session.clear()
+      window.dispatchEvent(new Event('session-expired'))
+    }
     throw new ApiError(res.status, data?.message ?? res.statusText, data?.errors ?? {})
   }
   return data
@@ -56,6 +60,7 @@ const MESSAGES = {
   'Username already taken': "Ce nom d'utilisateur est déjà pris.",
   'Email already used': 'Cet email est déjà utilisé.',
   'Validation failed': 'Merci de corriger les champs en erreur.',
+  'endDate must not be before startDate': 'La date de fin ne peut pas précéder la date de début.',
 }
 
 export function messageFor(err) {
@@ -77,5 +82,21 @@ export const api = {
 
   me() {
     return request('/users/me', { auth: true })
+  },
+
+  tasks() {
+    return request('/tasks', { auth: true })
+  },
+
+  createTask(body) {
+    return request('/tasks', { method: 'POST', body, auth: true })
+  },
+
+  updateTask(id, body) {
+    return request(`/tasks/${id}`, { method: 'PUT', body, auth: true })
+  },
+
+  deleteTask(id) {
+    return request(`/tasks/${id}`, { method: 'DELETE', auth: true })
   },
 }
