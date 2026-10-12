@@ -66,27 +66,28 @@ function deadlineAlert(iso) {
 }
 
 const sortKey = (t) => t.startDate ?? t.endDate ?? '9999-12-31'
-const norm = (v) => (v ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-const covers = (t, date) => {
-  const start = t.startDate ?? t.endDate
-  const end = t.endDate ?? t.startDate
-  return !!start && start <= date && date <= end
-}
-const matches = (t) => {
-  const q = norm(query.trim())
-  if (q && ![t.label, t.description, t.place].some((v) => norm(v).includes(q))) return false
-  if (filters.date && !covers(t, filters.date)) return false
-  if (filters.place && norm(t.place) !== norm(filters.place)) return false
-  if (filters.levels.size && !filters.levels.has(t.level)) return false
-  return true
-}
+const criteria = () => ({
+  q: query.trim(),
+  startDate: filters.date,
+  endDate: filters.date,
+  place: filters.place,
+  levels: [...filters.levels],
+})
 const hasFilters = () => !!(filters.date || filters.place || filters.levels.size)
-const places = () => [...new Map(tasks.filter((t) => t.place?.trim()).map((t) => [norm(t.place.trim()), t.place.trim()])).values()].sort((a, b) => a.localeCompare(b, 'fr'))
-const matching = () => tasks.filter(matches)
+const isSearching = () => !!query.trim() || hasFilters()
+
+// Lieux proposés dans la popup : pris sur l'ensemble des tâches, pas seulement sur le résultat d'une recherche
+let knownPlaces = []
+let placesLoaded = false
+const collectPlaces = (list) => [
+  ...new Map(list.filter((t) => t.place?.trim()).map((t) => [t.place.trim().toLowerCase(), t.place.trim()])).values(),
+].sort((a, b) => a.localeCompare(b, 'fr'))
+
+// `tasks` contient déjà le résultat de la recherche (faite par le backend) : ici on ne fait que trier l'onglet affiché
 const visible = () =>
   filter === 'upcoming'
-    ? matching().filter((t) => !t.done).sort((a, b) => sortKey(a).localeCompare(sortKey(b)) || a.id - b.id)
-    : matching().filter((t) => t.done).sort((a, b) => b.id - a.id)
+    ? tasks.filter((t) => !t.done).sort((a, b) => sortKey(a).localeCompare(sortKey(b)) || a.id - b.id)
+    : tasks.filter((t) => t.done).sort((a, b) => b.id - a.id)
 
 const toRequest = (t, changes = {}) => ({
   label: t.label,
@@ -169,7 +170,6 @@ export function mountMenu(root, user) {
   }
 
   function renderFilters() {
-    if (loaded && filters.place && !places().some((p) => norm(p) === norm(filters.place))) filters.place = ''
     const count = (filters.date ? 1 : 0) + (filters.place ? 1 : 0) + (filters.levels.size ? 1 : 0)
     const badge = $('#filter-badge')
     badge.hidden = !count
@@ -179,10 +179,9 @@ export function mountMenu(root, user) {
 
   function openFilters() {
     const f = filterForm.elements
-    const list = places()
     f.place.innerHTML =
       `<option value="">Tous les lieux</option>` +
-      list.map((p) => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')
+      knownPlaces.map((p) => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')
     f.date.value = filters.date
     f.place.value = filters.place
     filterForm.querySelectorAll('[name="level"]').forEach((c) => {
@@ -198,8 +197,8 @@ export function mountMenu(root, user) {
       b.setAttribute('aria-selected', String(b.dataset.filter === filter))
     })
     root.querySelector('.seg').style.setProperty('--i', filter === 'upcoming' ? 0 : 1)
-    root.querySelector('[data-count="upcoming"]').textContent = loaded ? matching().filter((t) => !t.done).length : ''
-    root.querySelector('[data-count="done"]').textContent = loaded ? matching().filter((t) => t.done).length : ''
+    root.querySelector('[data-count="upcoming"]').textContent = loaded ? tasks.filter((t) => !t.done).length : ''
+    root.querySelector('[data-count="done"]').textContent = loaded ? tasks.filter((t) => t.done).length : ''
 
     if (!loaded) {
       area.innerHTML = skeletonTpl
@@ -210,20 +209,37 @@ export function mountMenu(root, user) {
       area.innerHTML = `<ul class="tasks">${list.map(taskCard).join('')}</ul>`
     } else {
       area.innerHTML = emptyNote(
-        query.trim() || hasFilters() ? 'Aucun résultat' : filter === 'upcoming' ? 'Rien à venir' : 'Aucune tâche réalisée',
+        isSearching() ? 'Aucun résultat' : filter === 'upcoming' ? 'Rien à venir' : 'Aucune tâche réalisée',
       )
     }
   }
 
-  async function load() {
+  // Recherche côté backend (GET /search/tasks). Un compteur écarte les réponses périmées si l'utilisateur tape vite.
+  let searchSeq = 0
+  async function search() {
+    const seq = ++searchSeq
+    area.classList.add('is-busy')
     try {
-      tasks = await api.tasks()
-      loaded = true
+      const result = await api.searchTasks(criteria())
+      if (seq !== searchSeq) return
+      tasks = result
+      if (!isSearching()) {
+        knownPlaces = collectPlaces(result)
+        placesLoaded = true
+      } else if (!placesLoaded) {
+        placesLoaded = true
+        api.tasks().then((all) => (knownPlaces = collectPlaces(all))).catch(() => (placesLoaded = false))
+      }
     } catch (err) {
+      if (seq !== searchSeq) return
       if (err.status !== 401) toast(messageFor(err), true) // 401 : l'appli renvoie déjà à la connexion
-      loaded = true
+    } finally {
+      if (seq === searchSeq) {
+        loaded = true
+        area.classList.remove('is-busy')
+        renderList()
+      }
     }
-    renderList()
   }
 
   // ---------- Actions ----------
@@ -291,9 +307,11 @@ export function mountMenu(root, user) {
     }
   })
 
+  let searchTimer
   $('#search').addEventListener('input', (e) => {
     query = e.target.value
-    renderList()
+    clearTimeout(searchTimer) // on attend une courte pause dans la frappe avant d'interroger le backend
+    searchTimer = setTimeout(search, 300)
   })
 
   filterForm.addEventListener('submit', (e) => {
@@ -303,14 +321,16 @@ export function mountMenu(root, user) {
     filters.place = f.place.value
     filters.levels = new Set([...filterForm.querySelectorAll('[name="level"]:checked')].map((c) => Number(c.value)))
     closeDialog(filterSheet)
-    renderList()
+    renderFilters()
+    search()
   })
   $('#reset-filters').addEventListener('click', () => {
     filters.date = ''
     filters.place = ''
     filters.levels.clear()
     closeDialog(filterSheet)
-    renderList()
+    renderFilters()
+    search()
   })
 
   form.elements.startDate.addEventListener('change', (e) => {
@@ -325,9 +345,9 @@ export function mountMenu(root, user) {
     }
     try {
       await api.deleteTask(editing.id)
-      tasks = tasks.filter((t) => t.id !== editing.id)
       closeDialog(sheet)
-      renderList()
+      placesLoaded = false
+      search()
       toast('Tâche supprimée')
     } catch (err) {
       form.querySelector('.alert').textContent = messageFor(err)
@@ -355,16 +375,15 @@ export function mountMenu(root, user) {
       }
       const saved = editing ? await api.updateTask(editing.id, body) : await api.createTask(body)
 
-      if (editing) tasks = tasks.map((t) => (t.id === saved.id ? saved : t))
-      else tasks = [...tasks, saved]
       if (!saved.done) filter = 'upcoming'
 
       closeDialog(sheet)
-      renderList()
+      placesLoaded = false
+      await search()
       toast(editing ? 'Tâche modifiée' : 'Tâche créée')
     })
   })
 
   renderList()
-  load()
+  search()
 }

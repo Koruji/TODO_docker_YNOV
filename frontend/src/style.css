@@ -257,6 +257,8 @@ a:hover { text-decoration: underline; }
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 0.9rem);
   mask-image: linear-gradient(to bottom, transparent 0, #000 0.9rem);
 }
+#list-area { transition: opacity 0.2s; }
+#list-area.is-busy { opacity: 0.55; }
 #list-area::-webkit-scrollbar { display: none; }
 .home-list h1 { margin-bottom: 0.75rem; }
 

@@ -3,6 +3,7 @@ package com.todo.services;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.todo.dto.TaskRequest;
 import com.todo.dto.TaskResponse;
+import com.todo.dto.TaskSearchCriteria;
 import com.todo.exceptions.ResourceNotFoundException;
 import com.todo.models.Tasks;
 import com.todo.models.Users;
@@ -29,6 +31,17 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<TaskResponse> findAllByUser(Long userId) {
         return tasksRepository.findByUserId(userId).stream()
+                .map(TaskResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskResponse> search(Long userId, TaskSearchCriteria criteria) {
+        if (criteria.startDate() != null && criteria.endDate() != null
+                && criteria.endDate().isBefore(criteria.startDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "endDate must not be before startDate");
+        }
+        return tasksRepository.findAll(TaskSpecifications.matching(userId, criteria), Sort.by("id")).stream()
                 .map(TaskResponse::from)
                 .toList();
     }

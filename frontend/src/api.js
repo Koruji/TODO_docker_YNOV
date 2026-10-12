@@ -88,6 +88,18 @@ export const api = {
     return request('/tasks', { auth: true })
   },
 
+  // les critères vides ne sont pas envoyés
+  searchTasks({ q, startDate, endDate, place, levels } = {}) {
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (startDate) params.set('startDate', startDate)
+    if (endDate) params.set('endDate', endDate)
+    if (place) params.set('place', place)
+    if (levels?.length) params.set('levels', levels.join(','))
+    const qs = params.toString()
+    return request(`/search/tasks${qs ? `?${qs}` : ''}`, { auth: true })
+  },
+
   createTask(body) {
     return request('/tasks', { method: 'POST', body, auth: true })
   },
