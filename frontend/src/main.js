@@ -11,50 +11,34 @@ import stars from 'bootstrap-icons/icons/stars.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
 import gearFill from 'bootstrap-icons/icons/gear-fill.svg?raw'
 import { api, session } from './api.js'
-import { escapeHtml, submitForm } from './utils.js'
+import { render as fill, submitForm } from './utils.js'
+import ambientTpl from './templates/ambient.html?raw'
+import authShellTpl from './templates/auth-shell.html?raw'
+import fieldTpl from './templates/field.html?raw'
+import loginFormTpl from './templates/login-form.html?raw'
+import registerFormTpl from './templates/register-form.html?raw'
+import emptyStateTpl from './templates/empty-state.html?raw'
+import sectionTpl from './templates/section.html?raw'
+import settingsTpl from './templates/settings.html?raw'
+import shellTpl from './templates/shell.html?raw'
+import dockItemTpl from './templates/dock-item.html?raw'
 import { mountMenu } from './tasks.js'
 
 let user = null
 
 const app = document.querySelector('#app')
 
-const ambient = `
-  <div class="ambient" aria-hidden="true">
-    <span class="blob blob-1"></span>
-    <span class="blob blob-2"></span>
-    <span class="blob blob-3"></span>
-    <span class="orb"></span>
-  </div>`
+const field = ({ id, label, type = 'text', autocomplete, hint = '' }) =>
+  fill(fieldTpl, { id, label, type, autocomplete, hint })
 
-function field({ id, label, type = 'text', autocomplete, hint = '' }) {
-  return `
-    <div class="field">
-      <label for="${id}">${label}</label>
-      <input id="${id}" name="${id}" type="${type}" autocomplete="${autocomplete}" autocapitalize="none" spellcheck="false" required />
-      ${hint ? `<p class="hint">${hint}</p>` : ''}
-    </div>`
-}
-
-function authShell(title, form, switchText) {
-  return `
-    <main class="auth">
-      ${ambient}
-      <section class="auth-card">
-        <h1>${title}</h1>
-        ${form}
-        <p class="switch">${switchText}</p>
-      </section>
-    </main>`
-}
+const authShell = (title, form, switchText) => fill(authShellTpl, { ambient: ambientTpl, title, form, switchText })
 
 function loginView() {
-  app.innerHTML = authShell('CONNEXION', `
-    <form id="login-form" class="form" novalidate>
-      <div class="alert" role="alert" hidden></div>
-      ${field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' })}
-      ${field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'current-password' })}
-      <button type="submit" class="btn btn-primary">Se connecter</button>
-    </form>`, 'Pas encore de compte ? <a href="#/register">Créer un compte</a>')
+  const form = fill(loginFormTpl, {
+    email: field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' }),
+    password: field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'current-password' }),
+  })
+  app.innerHTML = authShell('CONNEXION', form, 'Pas encore de compte ? <a href="#/register">Créer un compte</a>')
 
   document.querySelector('#login-form').addEventListener('submit', (e) => {
     e.preventDefault()
@@ -67,14 +51,12 @@ function loginView() {
 }
 
 function registerView() {
-  app.innerHTML = authShell('Renseignez vos informations', `
-    <form id="register-form" class="form" novalidate>
-      <div class="alert" role="alert" hidden></div>
-      ${field({ id: 'username', label: "Nom d'utilisateur", autocomplete: 'username' })}
-      ${field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' })}
-      ${field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'new-password', hint: '8 caractères minimum' })}
-      <button type="submit" class="btn btn-primary">Créer mon compte</button>
-    </form>`, 'Vous avez déjà un compte ? <a href="#/login">Se connecter</a>')
+  const form = fill(registerFormTpl, {
+    username: field({ id: 'username', label: "Nom d'utilisateur", autocomplete: 'username' }),
+    email: field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email' }),
+    password: field({ id: 'password', label: 'Mot de passe', type: 'password', autocomplete: 'new-password', hint: '8 caractères minimum' }),
+  })
+  app.innerHTML = authShell('Renseignez vos informations', form, 'Vous avez déjà un compte ? <a href="#/login">Se connecter</a>')
 
   document.querySelector('#register-form').addEventListener('submit', (e) => {
     e.preventDefault()
@@ -93,51 +75,23 @@ const PAGES = [
   { path: '/settings', label: 'Paramètres', icon: gear, iconOn: gearFill },
 ]
 
-const emptyState = (svg, text) => `
-  <div class="empty">
-    <div class="empty-icon" aria-hidden="true">${svg}</div>
-    <h2>${text}</h2>
-  </div>`
-
-const section = (title, svg, text) => `
-  <main class="home">
-    <h1>${title}</h1>
-    ${emptyState(svg, text)}
-  </main>`
+const section = (title, icon, text) =>
+  fill(sectionTpl, { title, empty: fill(emptyStateTpl, { icon, text }) })
 
 const VIEWS = {
   '/menu': () => '<main class="home"></main>',
   '/stats': () => section('Statistiques', barChart, 'Bientôt disponible'),
   '/calendar': () => section('Calendrier', calendar, 'Bientôt disponible'),
-  '/settings': () => `
-    <main class="home">
-      <h1>Paramètres</h1>
-      <div class="settings">
-        <button id="logout" type="button" class="btn btn-danger">Se déconnecter</button>
-      </div>
-    </main>`,
+  '/settings': () => settingsTpl,
 }
 
 function shellView() {
-  const name = escapeHtml(user.username)
-  app.innerHTML = `
-    <div class="page">
-      ${ambient}
-
-      <header class="topbar">
-        <h1>Bonjour ${escapeHtml(name)} ! <span class="title-icon" aria-hidden="true">${stars}</span></h1>
-      </header>
-
-      <div id="view"></div>
-
-      <nav class="dock" aria-label="Navigation principale">
-        <span class="dock-indicator" aria-hidden="true"></span>
-        ${PAGES.map((p) => `
-          <a href="#${p.path}" aria-label="${p.label}" title="${p.label}">
-            <span class="ic ic-off">${p.icon}</span><span class="ic ic-on">${p.iconOn}</span>
-          </a>`).join('')}
-      </nav>
-    </div>`
+  app.innerHTML = fill(shellTpl, {
+    ambient: ambientTpl,
+    username: user.username,
+    stars,
+    dockItems: PAGES.map((p) => fill(dockItemTpl, p)).join(''),
+  })
 }
 
 function logout() {

@@ -1,0 +1,9 @@
+<li class="task{{#done}} is-done{{/done}}" style="--n:{{i}}" data-id="{{id}}">
+  <button type="button" class="check" data-toggle="{{id}}" aria-pressed="{{done}}"
+    aria-label="{{checkLabel}} : {{label}}">{{{check}}}</button>
+  <button type="button" class="task-body" data-edit="{{id}}"{{#done}} disabled{{/done}}>
+    <span class="task-title">{{label}}</span>
+    <span class="task-desc">{{description}}</span>
+    {{#chips}}<span class="task-meta">{{{chips}}}</span>{{/chips}}
+  </button>
+</li>

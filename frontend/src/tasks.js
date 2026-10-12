@@ -9,9 +9,29 @@ import checkCircle from 'bootstrap-icons/icons/check-circle.svg?raw'
 import alarm from 'bootstrap-icons/icons/alarm.svg?raw'
 import speedometer from 'bootstrap-icons/icons/speedometer2.svg?raw'
 import { api, ApiError, messageFor } from './api.js'
-import { escapeHtml, submitForm } from './utils.js'
+import { escapeHtml, render, submitForm } from './utils.js'
+import menuTpl from './templates/menu.html?raw'
+import taskCardTpl from './templates/task-card.html?raw'
+import chipTpl from './templates/chip.html?raw'
+import skeletonTpl from './templates/skeleton.html?raw'
+import emptyNoteTpl from './templates/empty-note.html?raw'
+import levelRadioTpl from './templates/level-radio.html?raw'
+import filterLevelTpl from './templates/filter-level.html?raw'
+import taskSheetTpl from './templates/task-sheet.html?raw'
+import filterSheetTpl from './templates/filter-sheet.html?raw'
 
 const svg = (raw) => raw.replace('<svg', '<svg aria-hidden="true" focusable="false"')
+
+const icons = {
+  sliders: svg(sliders),
+  search: svg(search),
+  plus: svg(plus),
+  check: svg(check),
+  close: svg(close),
+  geoAlt: svg(geoAlt),
+  calendarEvent: svg(calendarEvent),
+  speedometer: svg(speedometer),
+}
 
 let tasks = []
 let loaded = false
@@ -80,130 +100,45 @@ const toRequest = (t, changes = {}) => ({
   ...changes,
 })
 
+const chip = (icon, text, kind = '') => render(chipTpl, { icon: svg(icon), text, kind })
+
 function taskCard(t, i) {
   const chips = []
   const date = dateLabel(t)
-  if (date) chips.push(`<span class="chip">${svg(calendarEvent)}${escapeHtml(date)}</span>`)
-  if (t.place) chips.push(`<span class="chip chip-place">${svg(geoAlt)}${escapeHtml(t.place)}</span>`)
+  if (date) chips.push(chip(calendarEvent, date))
+  if (t.place) chips.push(chip(geoAlt, t.place, 'place'))
   const alert = !t.done && deadlineAlert(t.endDate)
-  if (alert) chips.push(`<span class="chip chip-${alert.kind}">${svg(alarm)}${alert.text}</span>`)
+  if (alert) chips.push(chip(alarm, alert.text, alert.kind))
   if (t.done && t.endDate && t.doneAt) {
     const onTime = t.doneAt <= t.endDate
-    chips.push(`<span class="chip chip-${onTime ? 'ontime' : 'late'}">${svg(onTime ? checkCircle : alarm)}${onTime ? 'Réalisée dans les temps' : 'Réalisée en retard'}</span>`)
+    chips.push(onTime ? chip(checkCircle, 'Réalisée dans les temps', 'ontime') : chip(alarm, 'Réalisée en retard', 'late'))
   }
-  if (!t.done && t.level > 0) chips.push(`<span class="chip chip-level lvl-${t.level}">${svg(speedometer)}Niveau ${t.level}</span>`)
-  const meta = chips.length ? `<span class="task-meta">${chips.join('')}</span>` : ''
+  if (!t.done && t.level > 0) chips.push(chip(speedometer, `Niveau ${t.level}`, `level lvl-${t.level}`))
 
-  return `
-    <li class="task${t.done ? ' is-done' : ''}" style="--n:${i}" data-id="${t.id}">
-      <button type="button" class="check" data-toggle="${t.id}" aria-pressed="${t.done}"
-        aria-label="${t.done ? 'Remettre à faire' : 'Marquer comme réalisée'} : ${escapeHtml(t.label)}">${svg(check)}</button>
-      <button type="button" class="task-body" data-edit="${t.id}"${t.done ? " disabled" : ""}>
-        <span class="task-title">${escapeHtml(t.label)}</span>
-        <span class="task-desc">${escapeHtml(t.description)}</span>
-        ${meta}
-      </button>
-    </li>`
+  return render(taskCardTpl, {
+    ...icons,
+    i,
+    id: t.id,
+    done: t.done,
+    label: t.label,
+    description: t.description,
+    checkLabel: t.done ? 'Remettre à faire' : 'Marquer comme réalisée',
+    chips: chips.join(''),
+  })
 }
 
-const emptyNote = (text) => `<p class="empty-note">${text}</p>`
+const emptyNote = (text) => render(emptyNoteTpl, { text })
 
-const skeleton = `<ul class="tasks" aria-hidden="true">${[0, 1, 2]
-  .map((i) => `<li class="task is-skeleton" style="--n:${i}"></li>`)
-  .join('')}</ul>`
+const taskLevels = [
+  { value: '', symbol: '–', text: 'Aucun niveau', checked: true },
+  ...[0, 1, 2, 3].map((n) => ({ value: n, symbol: n, text: `Niveau ${n}` })),
+]
+const sheetHtml = render(taskSheetTpl, { ...icons, levels: taskLevels.map((l) => render(levelRadioTpl, l)).join('') })
 
-function level(n, text) {
-  return `
-    <label class="level">
-      <input type="radio" name="level" value="${n}" ${n === '' ? 'checked' : ''} />
-      <span aria-label="${text}">${n === '' ? '–' : n}</span>
-    </label>`
-}
-
-const sheetHtml = `
-  <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
-    <div class="sheet-panel">
-      <header class="sheet-head">
-        <h2 id="sheet-title"></h2>
-        <button type="button" class="icon-btn" data-close aria-label="Fermer">${svg(close)}</button>
-      </header>
-
-      <form id="task-form" class="form" novalidate>
-        <div class="alert" role="alert" hidden></div>
-
-        <div class="field">
-          <label for="f-label">Titre</label>
-          <input id="f-label" name="label" type="text" maxlength="255" autocomplete="off" required />
-        </div>
-        <div class="field">
-          <label for="f-description">Description</label>
-          <textarea id="f-description" name="description" rows="3" required></textarea>
-        </div>
-        <div class="dates">
-          <div class="field">
-            <label for="f-start">Début</label>
-            <input id="f-start" name="startDate" type="date" />
-          </div>
-          <div class="field">
-            <label for="f-end">Fin</label>
-            <input id="f-end" name="endDate" type="date" />
-          </div>
-        </div>
-        <div class="field">
-          <label for="f-place">Lieu</label>
-          <input id="f-place" name="place" type="text" maxlength="255" autocomplete="off" />
-        </div>
-        <fieldset class="field levels">
-          <legend>Niveau</legend>
-          <div class="levels-row">
-            ${level('', 'Aucun niveau')}${level('0', 'Niveau 0')}${level('1', 'Niveau 1')}${level('2', 'Niveau 2')}${level('3', 'Niveau 3')}
-          </div>
-        </fieldset>
-
-        <div class="sheet-actions">
-          <button type="button" class="btn btn-quiet" id="delete-task" hidden>Supprimer</button>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
-        </div>
-      </form>
-    </div>
-  </dialog>`
-
-const filterSheetHtml = `
-  <dialog class="sheet" id="filter-sheet" aria-labelledby="filter-title">
-    <div class="sheet-panel">
-      <header class="sheet-head">
-        <h2 id="filter-title">Filtrer les tâches</h2>
-        <button type="button" class="icon-btn" data-close aria-label="Fermer">${svg(close)}</button>
-      </header>
-
-      <form id="filter-form" class="form" novalidate>
-        <div class="field">
-          <label for="q-date">${svg(calendarEvent)} Date</label>
-          <input id="q-date" name="date" type="date" />
-          <p class="hint">Les tâches en cours ce jour-là</p>
-        </div>
-        <div class="field">
-          <label for="q-place">${svg(geoAlt)} Lieu</label>
-          <select id="q-place" name="place"></select>
-        </div>
-        <fieldset class="field levels">
-          <legend>${svg(speedometer)} Niveau</legend>
-          <div class="levels-row levels-row-start">
-            ${[1, 2, 3]
-              .map(
-                (n) => `<label class="level lvl-${n}"><input type="checkbox" name="level" value="${n}" /><span aria-label="Niveau ${n}">${n}</span></label>`,
-              )
-              .join('')}
-          </div>
-        </fieldset>
-
-        <div class="sheet-actions">
-          <button type="button" class="btn btn-quiet" id="reset-filters">Réinitialiser</button>
-          <button type="submit" class="btn btn-primary">${svg(search)} Rechercher</button>
-        </div>
-      </form>
-    </div>
-  </dialog>`
+const filterSheetHtml = render(filterSheetTpl, {
+  ...icons,
+  levels: [1, 2, 3].map((n) => render(filterLevelTpl, { n })).join(''),
+})
 
 const openDialog = (d) => (d.showModal ? d.showModal() : d.setAttribute('open', ''))
 const closeDialog = (d) => (d.close ? d.close() : d.removeAttribute('open'))
@@ -211,29 +146,7 @@ const closeDialog = (d) => (d.close ? d.close() : d.removeAttribute('open'))
 export function mountMenu(root, user) {
   const name = user.username
   root.classList.add('home-list')
-  root.innerHTML = `
-    <div class="search-row">
-      <button type="button" class="fab" id="open-filters" aria-label="Filtres de recherche" aria-haspopup="dialog">
-        ${svg(sliders)}<span class="fab-badge" id="filter-badge" hidden></span>
-      </button>
-      <div class="field search">
-        <span class="search-icon" aria-hidden="true">${svg(search)}</span>
-        <input type="search" id="search" placeholder="Rechercher une tâche" aria-label="Rechercher une tâche" autocomplete="off" value="${escapeHtml(query)}" />
-      </div>
-    </div>
-
-    <div class="toolbar">
-      <div class="seg" role="tablist" aria-label="Filtrer les tâches">
-        <span class="seg-indicator" aria-hidden="true"></span>
-        <button type="button" role="tab" data-filter="upcoming">À venir <span class="count" data-count="upcoming"></span></button>
-        <button type="button" role="tab" data-filter="done">Réalisées <span class="count" data-count="done"></span></button>
-      </div>
-      <button type="button" class="fab" id="new-task" aria-label="Nouvelle tâche">${svg(plus)}</button>
-    </div>
-
-    <section id="list-area" aria-live="polite"></section>
-    ${sheetHtml}
-    ${filterSheetHtml}`
+  root.innerHTML = render(menuTpl, { ...icons, query, taskSheet: sheetHtml, filterSheet: filterSheetHtml })
 
   const $ = (sel) => root.querySelector(sel)
   const area = $('#list-area')
@@ -289,7 +202,7 @@ export function mountMenu(root, user) {
     root.querySelector('[data-count="done"]').textContent = loaded ? matching().filter((t) => t.done).length : ''
 
     if (!loaded) {
-      area.innerHTML = skeleton
+      area.innerHTML = skeletonTpl
       return
     }
     const list = visible()
