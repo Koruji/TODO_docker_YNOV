@@ -33,6 +33,9 @@ public class Tasks {
     @Column(name = "done_at")
     private LocalDate doneAt;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDate createdAt = LocalDate.now();
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
@@ -59,6 +62,7 @@ public class Tasks {
     public Integer getLevel() { return level; }
     public boolean isDone() { return done; }
     public LocalDate getDoneAt() { return doneAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
     public Users getUser() { return user; }
     public Users getCollaborator() { return collaborator; }
 

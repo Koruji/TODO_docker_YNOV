@@ -117,6 +117,10 @@ export const api = {
     return request('/search/tasks/done', { auth: true })
   },
 
+  activity(from, to) {
+    return request(`/stats/activity?from=${from}&to=${to}`, { auth: true })
+  },
+
   createTask(body) {
     return request('/tasks', { method: 'POST', body, auth: true })
   },

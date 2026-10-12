@@ -8,6 +8,7 @@ import barChartFill from 'bootstrap-icons/icons/bar-chart-fill.svg?raw'
 import calendar from 'bootstrap-icons/icons/calendar-week.svg?raw'
 import calendarFill from 'bootstrap-icons/icons/calendar-week-fill.svg?raw'
 import stars from 'bootstrap-icons/icons/stars.svg?raw'
+import graph from 'bootstrap-icons/icons/bar-chart-line.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
 import gearFill from 'bootstrap-icons/icons/gear-fill.svg?raw'
 import { api, session } from './api.js'
@@ -22,7 +23,9 @@ import sectionTpl from './templates/pages/section.html?raw'
 import settingsTpl from './templates/pages/settings.html?raw'
 import shellTpl from './templates/layout/shell.html?raw'
 import dockItemTpl from './templates/layout/dock-item.html?raw'
+import pageTitleTpl from './templates/layout/page-title.html?raw'
 import { mountMenu } from './tasks.js'
+import { mountStats } from './stats.js'
 
 let user = null
 
@@ -68,9 +71,14 @@ function registerView() {
   })
 }
 
+// title : texte de l'en-tête de la page (par défaut « Bonjour {nom} ! »), titleIcon : petite icône à sa suite
+const greeting = (name) => `Bonjour ${name} !`
 const PAGES = [
   { path: '/menu', label: 'Menu', icon: house, iconOn: houseFill },
-  { path: '/stats', label: 'Statistiques', icon: barChart, iconOn: barChartFill },
+  {
+    path: '/stats', label: 'Statistiques', icon: barChart, iconOn: barChartFill,
+    title: (name) => `Envie d'avoir une vue d'ensemble ${name} ?`, titleIcon: graph,
+  },
   { path: '/calendar', label: 'Calendrier', icon: calendar, iconOn: calendarFill },
   { path: '/settings', label: 'Paramètres', icon: gear, iconOn: gearFill },
 ]
@@ -80,7 +88,7 @@ const section = (title, icon, text) =>
 
 const VIEWS = {
   '/menu': () => '<main class="home"></main>',
-  '/stats': () => section('Statistiques', barChart, 'Bientôt disponible'),
+  '/stats': () => '<main class="home"></main>',
   '/calendar': () => section('Calendrier', calendar, 'Bientôt disponible'),
   '/settings': () => settingsTpl,
 }
@@ -88,8 +96,6 @@ const VIEWS = {
 function shellView() {
   app.innerHTML = fill(shellTpl, {
     ambient: ambientTpl,
-    username: user.username,
-    stars,
     dockItems: PAGES.map((p) => fill(dockItemTpl, p)).join(''),
   })
 }
@@ -104,6 +110,11 @@ function pageView(path) {
   if (!document.querySelector('.page')) shellView()
 
   const index = PAGES.findIndex((p) => p.path === path)
+  const page = PAGES[index]
+  document.querySelector('#page-title').innerHTML = fill(pageTitleTpl, {
+    text: (page.title ?? greeting)(user.username),
+    icon: page.titleIcon ?? stars,
+  })
   const dock = document.querySelector('.dock')
   dock.style.setProperty('--i', index)
   dock.querySelectorAll('a').forEach((link, i) => {
@@ -114,6 +125,7 @@ function pageView(path) {
   const view = document.querySelector('#view')
   view.innerHTML = VIEWS[path]()
   if (path === '/menu') mountMenu(view.querySelector('.home'), user)
+  if (path === '/stats') mountStats(view.querySelector('.home'))
   if (path === '/settings') view.querySelector('#logout').addEventListener('click', logout)
 }
 
