@@ -1,7 +1,9 @@
 package com.todo.services;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.todo.dto.TaskRequest;
 import com.todo.dto.TaskResponse;
+import com.todo.dto.TaskSearchCriteria;
 import com.todo.exceptions.ResourceNotFoundException;
 import com.todo.models.Tasks;
 import com.todo.models.Users;
@@ -30,6 +33,28 @@ public class TaskService {
         return tasksRepository.findByUserId(userId).stream()
                 .map(TaskResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskResponse> search(Long userId, TaskSearchCriteria criteria) {
+        if (criteria.startDate() != null && criteria.endDate() != null
+                && criteria.endDate().isBefore(criteria.startDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "endDate must not be before startDate");
+        }
+        return tasksRepository.findAll(TaskSpecifications.matching(userId, criteria), Sort.by("id")).stream()
+                .map(TaskResponse::from)
+                .toList();
+    }
+
+    /** Lieux déjà renseignés par l'utilisateur, sans doublon (casse ignorée), triés. */
+    @Transactional(readOnly = true)
+    public List<String> findPlaces(Long userId) {
+        var byKey = new java.util.LinkedHashMap<String, String>();
+        for (String place : tasksRepository.findDistinctPlacesByUserId(userId)) {
+            String trimmed = place.trim();
+            if (!trimmed.isEmpty()) byKey.putIfAbsent(trimmed.toLowerCase(java.util.Locale.ROOT), trimmed);
+        }
+        return byKey.values().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +95,10 @@ public class TaskService {
         task.setPlace(request.place());
         task.setLevel(request.level());
         task.setCollaborator(findCollaborator(request.collaboratorId()));
+        if (request.done() != null && request.done() != task.isDone()) {
+            task.setDone(request.done());
+            task.setDoneAt(request.done() ? LocalDate.now() : null);
+        }
     }
 
     private Users findCollaborator(Long collaboratorId) {

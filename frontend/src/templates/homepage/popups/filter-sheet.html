@@ -1,0 +1,31 @@
+<dialog class="sheet" id="filter-sheet" aria-labelledby="filter-title">
+  <div class="sheet-panel">
+    <header class="sheet-head">
+      <h2 id="filter-title">Filtrer les tâches</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Fermer">{{{close}}}</button>
+    </header>
+
+    <form id="filter-form" class="form" novalidate>
+      <div class="field">
+        <label for="q-date">{{{calendarEvent}}} Date</label>
+        <input id="q-date" name="date" type="date" />
+        <p class="hint">Les tâches en cours ce jour-là</p>
+      </div>
+      <div class="field">
+        <label for="q-place">{{{geoAlt}}} Lieu</label>
+        <select id="q-place" name="place"></select>
+      </div>
+      <fieldset class="field levels">
+        <legend>{{{speedometer}}} Niveau</legend>
+        <div class="levels-row levels-row-start">
+          {{{levels}}}
+        </div>
+      </fieldset>
+
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-quiet" id="reset-filters">Réinitialiser</button>
+        <button type="submit" class="btn btn-primary">{{{search}}} Rechercher</button>
+      </div>
+    </form>
+  </div>
+</dialog>

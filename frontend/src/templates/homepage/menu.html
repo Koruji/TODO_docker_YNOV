@@ -1,0 +1,22 @@
+<div class="search-row">
+  <button type="button" class="fab" id="open-filters" aria-label="Filtres de recherche" aria-haspopup="dialog">
+    {{{sliders}}}<span class="fab-badge" id="filter-badge" hidden></span>
+  </button>
+  <div class="field search">
+    <span class="search-icon" aria-hidden="true">{{{search}}}</span>
+    <input type="search" id="search" placeholder="Rechercher une tâche" aria-label="Rechercher une tâche" autocomplete="off" value="{{query}}" />
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="seg" role="tablist" aria-label="Filtrer les tâches">
+    <span class="seg-indicator" aria-hidden="true"></span>
+    <button type="button" role="tab" data-filter="upcoming">À venir <span class="count" data-count="upcoming"></span></button>
+    <button type="button" role="tab" data-filter="done">Réalisées <span class="count" data-count="done"></span></button>
+  </div>
+  <button type="button" class="fab" id="new-task" aria-label="Nouvelle tâche">{{{plus}}}</button>
+</div>
+
+<section id="list-area" aria-live="polite"></section>
+{{{taskSheet}}}
+{{{filterSheet}}}

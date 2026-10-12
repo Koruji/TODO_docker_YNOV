@@ -1,0 +1,46 @@
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <div class="sheet-panel">
+    <header class="sheet-head">
+      <h2 id="sheet-title"></h2>
+      <button type="button" class="icon-btn" data-close aria-label="Fermer">{{{close}}}</button>
+    </header>
+
+    <form id="task-form" class="form" novalidate>
+      <div class="alert" role="alert" hidden></div>
+
+      <div class="field">
+        <label for="f-label">Titre</label>
+        <input id="f-label" name="label" type="text" maxlength="255" autocomplete="off" required />
+      </div>
+      <div class="field">
+        <label for="f-description">Description</label>
+        <textarea id="f-description" name="description" rows="3" required></textarea>
+      </div>
+      <div class="dates">
+        <div class="field">
+          <label for="f-start">Début</label>
+          <input id="f-start" name="startDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="f-end">Fin</label>
+          <input id="f-end" name="endDate" type="date" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-place">Lieu</label>
+        <input id="f-place" name="place" type="text" maxlength="255" autocomplete="off" />
+      </div>
+      <fieldset class="field levels">
+        <legend>Niveau</legend>
+        <div class="levels-row">
+          {{{levels}}}
+        </div>
+      </fieldset>
+
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-quiet" id="delete-task" hidden>Supprimer</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</dialog>

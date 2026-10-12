@@ -46,6 +46,10 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
 
   const data = await res.json().catch(() => null)
   if (!res.ok) {
+    if (auth && res.status === 401) {
+      session.clear()
+      window.dispatchEvent(new Event('session-expired'))
+    }
     throw new ApiError(res.status, data?.message ?? res.statusText, data?.errors ?? {})
   }
   return data
@@ -56,11 +60,25 @@ const MESSAGES = {
   'Username already taken': "Ce nom d'utilisateur est déjà pris.",
   'Email already used': 'Cet email est déjà utilisé.',
   'Validation failed': 'Merci de corriger les champs en erreur.',
+  'endDate must not be before startDate': 'La date de fin ne peut pas précéder la date de début.',
 }
 
 export function messageFor(err) {
   if (err.status === 0) return err.message
   return MESSAGES[err.message] ?? 'Une erreur est survenue, réessaie.'
+}
+
+// Critères de recherche -> "?q=...&startDate=..." ; les critères vides ne sont pas envoyés
+function queryString({ q, startDate, endDate, place, levels, done } = {}) {
+  const params = new URLSearchParams()
+  if (q) params.set('q', q)
+  if (startDate) params.set('startDate', startDate)
+  if (endDate) params.set('endDate', endDate)
+  if (place) params.set('place', place)
+  if (levels?.length) params.set('levels', levels.join(','))
+  if (done !== undefined) params.set('done', done)
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
 }
 
 export const api = {
@@ -77,5 +95,37 @@ export const api = {
 
   me() {
     return request('/users/me', { auth: true })
+  },
+
+  tasks() {
+    return request('/tasks', { auth: true })
+  },
+
+  places() {
+    return request('/search/places', { auth: true })
+  },
+
+  searchTasks(criteria) {
+    return request(`/search/tasks${queryString(criteria)}`, { auth: true })
+  },
+
+  todoTasks() {
+    return request('/search/tasks/todo', { auth: true })
+  },
+
+  doneTasks() {
+    return request('/search/tasks/done', { auth: true })
+  },
+
+  createTask(body) {
+    return request('/tasks', { method: 'POST', body, auth: true })
+  },
+
+  updateTask(id, body) {
+    return request(`/tasks/${id}`, { method: 'PUT', body, auth: true })
+  },
+
+  deleteTask(id) {
+    return request(`/tasks/${id}`, { method: 'DELETE', auth: true })
   },
 }
