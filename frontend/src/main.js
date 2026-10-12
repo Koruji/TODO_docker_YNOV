@@ -7,6 +7,7 @@ import barChart from 'bootstrap-icons/icons/bar-chart.svg?raw'
 import barChartFill from 'bootstrap-icons/icons/bar-chart-fill.svg?raw'
 import calendar from 'bootstrap-icons/icons/calendar-week.svg?raw'
 import calendarFill from 'bootstrap-icons/icons/calendar-week-fill.svg?raw'
+import stars from 'bootstrap-icons/icons/stars.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
 import gearFill from 'bootstrap-icons/icons/gear-fill.svg?raw'
 import { api, session } from './api.js'
@@ -119,16 +120,12 @@ const VIEWS = {
 
 function shellView() {
   const name = escapeHtml(user.username)
-  const initial = escapeHtml(user.username.charAt(0).toUpperCase())
   app.innerHTML = `
     <div class="page">
       ${ambient}
 
       <header class="topbar">
-        <div class="topbar-user">
-          <span class="avatar" aria-hidden="true">${initial}</span>
-          <span class="topbar-name">${name}</span>
-        </div>
+        <h1>Bonjour ${escapeHtml(name)} ! <span class="title-icon" aria-hidden="true">${stars}</span></h1>
       </header>
 
       <div id="view"></div>
@@ -141,7 +138,6 @@ function shellView() {
           </a>`).join('')}
       </nav>
     </div>`
-
 }
 
 function logout() {

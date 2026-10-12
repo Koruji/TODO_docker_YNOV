@@ -1,5 +1,6 @@
 package com.todo.services;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -70,8 +71,9 @@ public class TaskService {
         task.setPlace(request.place());
         task.setLevel(request.level());
         task.setCollaborator(findCollaborator(request.collaboratorId()));
-        if (request.done() != null) {
+        if (request.done() != null && request.done() != task.isDone()) {
             task.setDone(request.done());
+            task.setDoneAt(request.done() ? LocalDate.now() : null);
         }
     }
 
