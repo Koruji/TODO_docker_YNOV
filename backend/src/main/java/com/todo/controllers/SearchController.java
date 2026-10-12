@@ -38,4 +38,22 @@ public class SearchController {
         var criteria = new TaskSearchCriteria(q, startDate, endDate, place, levels, done);
         return taskService.search(Long.valueOf(jwt.getSubject()), criteria);
     }
+
+    /** Toutes les tâches réalisées de l'utilisateur. */
+    @GetMapping("/tasks/done")
+    public List<TaskResponse> doneTasks(@AuthenticationPrincipal Jwt jwt) {
+        return taskService.search(Long.valueOf(jwt.getSubject()), new TaskSearchCriteria(null, null, null, null, null, true));
+    }
+
+    /** Toutes les tâches non faites de l'utilisateur. */
+    @GetMapping("/tasks/todo")
+    public List<TaskResponse> todoTasks(@AuthenticationPrincipal Jwt jwt) {
+        return taskService.search(Long.valueOf(jwt.getSubject()), new TaskSearchCriteria(null, null, null, null, null, false));
+    }
+
+    /** Lieux déjà renseignés, pour alimenter la liste déroulante des filtres. */
+    @GetMapping("/places")
+    public List<String> places(@AuthenticationPrincipal Jwt jwt) {
+        return taskService.findPlaces(Long.valueOf(jwt.getSubject()));
+    }
 }

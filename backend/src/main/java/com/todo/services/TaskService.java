@@ -46,6 +46,17 @@ public class TaskService {
                 .toList();
     }
 
+    /** Lieux déjà renseignés par l'utilisateur, sans doublon (casse ignorée), triés. */
+    @Transactional(readOnly = true)
+    public List<String> findPlaces(Long userId) {
+        var byKey = new java.util.LinkedHashMap<String, String>();
+        for (String place : tasksRepository.findDistinctPlacesByUserId(userId)) {
+            String trimmed = place.trim();
+            if (!trimmed.isEmpty()) byKey.putIfAbsent(trimmed.toLowerCase(java.util.Locale.ROOT), trimmed);
+        }
+        return byKey.values().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+    }
+
     @Transactional(readOnly = true)
     public TaskResponse findById(Long taskId, Long userId) {
         return TaskResponse.from(getOwnedTask(taskId, userId));

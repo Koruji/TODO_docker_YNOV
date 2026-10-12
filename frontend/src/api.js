@@ -68,6 +68,19 @@ export function messageFor(err) {
   return MESSAGES[err.message] ?? 'Une erreur est survenue, réessaie.'
 }
 
+// Critères de recherche -> "?q=...&startDate=..." ; les critères vides ne sont pas envoyés
+function queryString({ q, startDate, endDate, place, levels, done } = {}) {
+  const params = new URLSearchParams()
+  if (q) params.set('q', q)
+  if (startDate) params.set('startDate', startDate)
+  if (endDate) params.set('endDate', endDate)
+  if (place) params.set('place', place)
+  if (levels?.length) params.set('levels', levels.join(','))
+  if (done !== undefined) params.set('done', done)
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
+}
+
 export const api = {
   async login(email, password) {
     const { token, user } = await request('/auth/login', { method: 'POST', body: { email, password } })
@@ -88,16 +101,20 @@ export const api = {
     return request('/tasks', { auth: true })
   },
 
-  // les critères vides ne sont pas envoyés
-  searchTasks({ q, startDate, endDate, place, levels } = {}) {
-    const params = new URLSearchParams()
-    if (q) params.set('q', q)
-    if (startDate) params.set('startDate', startDate)
-    if (endDate) params.set('endDate', endDate)
-    if (place) params.set('place', place)
-    if (levels?.length) params.set('levels', levels.join(','))
-    const qs = params.toString()
-    return request(`/search/tasks${qs ? `?${qs}` : ''}`, { auth: true })
+  places() {
+    return request('/search/places', { auth: true })
+  },
+
+  searchTasks(criteria) {
+    return request(`/search/tasks${queryString(criteria)}`, { auth: true })
+  },
+
+  todoTasks() {
+    return request('/search/tasks/todo', { auth: true })
+  },
+
+  doneTasks() {
+    return request('/search/tasks/done', { auth: true })
   },
 
   createTask(body) {

@@ -76,14 +76,10 @@ const criteria = () => ({
 const hasFilters = () => !!(filters.date || filters.place || filters.levels.size)
 const isSearching = () => !!query.trim() || hasFilters()
 
-// Lieux proposés dans la popup : pris sur l'ensemble des tâches, pas seulement sur le résultat d'une recherche
+// Lieux proposés dans la popup : fournis par le backend (GET /search/places)
 let knownPlaces = []
-let placesLoaded = false
-const collectPlaces = (list) => [
-  ...new Map(list.filter((t) => t.place?.trim()).map((t) => [t.place.trim().toLowerCase(), t.place.trim()])).values(),
-].sort((a, b) => a.localeCompare(b, 'fr'))
 
-// `tasks` contient déjà le résultat de la recherche (faite par le backend) : ici on ne fait que trier l'onglet affiché
+// `tasks` contient les résultats de la recherche faite par le backend (déjà séparés par `done`) : ici on ne fait que trier l'onglet affiché
 const visible = () =>
   filter === 'upcoming'
     ? tasks.filter((t) => !t.done).sort((a, b) => sortKey(a).localeCompare(sortKey(b)) || a.id - b.id)
@@ -215,21 +211,26 @@ export function mountMenu(root, user) {
   }
 
   // Recherche côté backend (GET /search/tasks). Un compteur écarte les réponses périmées si l'utilisateur tape vite.
+  async function loadPlaces() {
+    try {
+      knownPlaces = await api.places()
+    } catch {
+      // la liste déroulante reste simplement avec les lieux déjà connus
+    }
+  }
+
   let searchSeq = 0
   async function search() {
     const seq = ++searchSeq
     area.classList.add('is-busy')
     try {
-      const result = await api.searchTasks(criteria())
+      // Une requête par onglet, toujours côté backend : sans recherche on liste (/todo et /done),
+      // avec une recherche on passe par /search/tasks en précisant done=false ou done=true
+      const [upcoming, finished] = isSearching()
+        ? await Promise.all([api.searchTasks({ ...criteria(), done: false }), api.searchTasks({ ...criteria(), done: true })])
+        : await Promise.all([api.todoTasks(), api.doneTasks()])
       if (seq !== searchSeq) return
-      tasks = result
-      if (!isSearching()) {
-        knownPlaces = collectPlaces(result)
-        placesLoaded = true
-      } else if (!placesLoaded) {
-        placesLoaded = true
-        api.tasks().then((all) => (knownPlaces = collectPlaces(all))).catch(() => (placesLoaded = false))
-      }
+      tasks = [...upcoming, ...finished]
     } catch (err) {
       if (seq !== searchSeq) return
       if (err.status !== 401) toast(messageFor(err), true) // 401 : l'appli renvoie déjà à la connexion
@@ -346,8 +347,8 @@ export function mountMenu(root, user) {
     try {
       await api.deleteTask(editing.id)
       closeDialog(sheet)
-      placesLoaded = false
       search()
+      loadPlaces()
       toast('Tâche supprimée')
     } catch (err) {
       form.querySelector('.alert').textContent = messageFor(err)
@@ -378,7 +379,7 @@ export function mountMenu(root, user) {
       if (!saved.done) filter = 'upcoming'
 
       closeDialog(sheet)
-      placesLoaded = false
+      loadPlaces()
       await search()
       toast(editing ? 'Tâche modifiée' : 'Tâche créée')
     })
@@ -386,4 +387,5 @@ export function mountMenu(root, user) {
 
   renderList()
   search()
+  loadPlaces()
 }
