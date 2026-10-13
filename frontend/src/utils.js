@@ -3,16 +3,17 @@ import { messageFor } from './api.js'
 export const escapeHtml = (str) =>
   String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 
-// Mini moteur de templates : {{x}} (échappé), {{{x}}} (HTML brut), {{#x}}…{{/x}} (affiché si x est vrai).
-// Une seule passe : un texte inséré n'est jamais ré-interprété comme un {{motif}}.
+// Mini moteur de templates : {{x}} (échappé), {{{x}}} (HTML brut), {{#x}}…{{/x}} (affiché si x est vrai, imbrication possible).
+// Une seule passe pour les variables : un texte inséré n'est jamais ré-interprété comme un {{motif}}.
+const keepSections = (template, data) =>
+  template.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, body) => (data[key] ? keepSections(body, data) : ''))
+
 export const render = (template, data = {}) =>
-  template
-    .replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, body) => (data[key] ? body : ''))
-    .replace(/\{\{\{(\w+)\}\}\}|\{\{(\w+)\}\}/g, (_, raw, escaped) => {
-      const value = data[raw ?? escaped]
-      if (value == null) return ''
-      return raw ? String(value) : escapeHtml(value)
-    })
+  keepSections(template, data).replace(/\{\{\{(\w+)\}\}\}|\{\{(\w+)\}\}/g, (_, raw, escaped) => {
+    const value = data[raw ?? escaped]
+    if (value == null) return ''
+    return raw ? String(value) : escapeHtml(value)
+  })
 
 export function toast(message, isError = false) {
   const el = document.createElement('div')

@@ -51,6 +51,14 @@ public class SearchController {
         return taskService.search(Long.valueOf(jwt.getSubject()), new TaskSearchCriteria(null, null, null, null, null, false));
     }
 
+    /** Tâches à faire ce jour-là avec un rappel activé (sert aux notifications de 8 h, 13 h et 18 h). */
+    @GetMapping("/tasks/reminders")
+    public List<TaskResponse> reminders(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return taskService.findReminders(Long.valueOf(jwt.getSubject()), date);
+    }
+
     /** Lieux déjà renseignés, pour alimenter la liste déroulante des filtres. */
     @GetMapping("/places")
     public List<String> places(@AuthenticationPrincipal Jwt jwt) {

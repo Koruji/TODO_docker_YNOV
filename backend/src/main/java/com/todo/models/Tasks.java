@@ -33,6 +33,9 @@ public class Tasks {
     @Column(name = "done_at")
     private LocalDate doneAt;
 
+    @Column(nullable = false)
+    private boolean reminder = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDate createdAt = LocalDate.now();
 
@@ -62,6 +65,7 @@ public class Tasks {
     public Integer getLevel() { return level; }
     public boolean isDone() { return done; }
     public LocalDate getDoneAt() { return doneAt; }
+    public boolean isReminder() { return reminder; }
     public LocalDate getCreatedAt() { return createdAt; }
     public Users getUser() { return user; }
     public Users getCollaborator() { return collaborator; }
@@ -74,6 +78,7 @@ public class Tasks {
     public void setLevel(Integer level) { this.level = level; }
     public void setDone(boolean done) { this.done = done; }
     public void setDoneAt(LocalDate doneAt) { this.doneAt = doneAt; }
+    public void setReminder(boolean reminder) { this.reminder = reminder; }
     public void setUser(Users user) { this.user = user; }
     public void setCollaborator(Users collaborator) { this.collaborator = collaborator; }
 

@@ -138,6 +138,14 @@ export const api = {
     return request(`/stats/activity?from=${from}&to=${to}`, { auth: true })
   },
 
+  setReminder(id, enabled) {
+    return request(`/tasks/${id}/reminder`, { method: 'PUT', body: { enabled }, auth: true })
+  },
+
+  todayReminders(date) {
+    return request(`/search/tasks/reminders?date=${date}`, { auth: true })
+  },
+
   createTask(body) {
     return request('/tasks', { method: 'POST', body, auth: true })
   },

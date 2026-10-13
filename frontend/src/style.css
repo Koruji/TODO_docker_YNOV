@@ -560,3 +560,106 @@ a:hover { text-decoration: underline; }
 .btn-cancel:hover { background: var(--accent-soft); }
 .confirm-text { margin: 0 0 1.25rem; }
 .sheet-actions .btn-danger { flex: 1; width: auto; min-width: 8rem; }
+
+/* ---------- Calendrier : jour / semaine / mois ---------- */
+.home-calendar { justify-content: flex-start; align-items: stretch; max-width: 36rem; gap: 1rem; text-align: left; padding-top: 0.25rem; }
+.cal { display: grid; gap: 1rem; }
+
+/* Sélecteur de période : même piste creusée que « À venir / Réalisées » */
+.cal-seg {
+  --i: 0; position: relative; display: grid; grid-template-columns: repeat(3, 1fr); padding: 0.3rem; border-radius: 999px;
+  background: rgba(255, 252, 243, 0.45);
+  box-shadow: inset 4px 4px 9px var(--carve-dark), inset -4px -4px 9px var(--carve-light);
+}
+.cal-seg-indicator {
+  position: absolute; top: 0.3rem; bottom: 0.3rem; left: 0.3rem; width: calc((100% - 0.6rem) / 3); border-radius: 999px;
+  background: var(--accent); box-shadow: 0 8px 18px -8px rgba(77, 93, 57, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transform: translateX(calc(var(--i) * 100%)); transition: transform 0.5s cubic-bezier(0.25, 1, 0.35, 1);
+}
+.cal-seg button {
+  position: relative; z-index: 1; min-height: 2.5rem; border: 0; border-radius: 999px; background: none; cursor: pointer;
+  font: inherit; font-size: 0.85rem; font-weight: 700; color: var(--sage-700); transition: color 0.3s;
+}
+.cal-seg button[aria-selected='true'] { color: var(--on-accent); }
+
+.cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.cal-title { display: grid; justify-items: center; gap: 0.15rem; min-width: 0; text-align: center; }
+.cal-title strong { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 500; color: var(--text-h); overflow-wrap: anywhere; }
+.cal-today { border: 0; background: none; padding: 0; font: inherit; font-size: 0.78rem; font-weight: 700; color: var(--accent); cursor: pointer; }
+.cal-today:hover { text-decoration: underline; }
+
+#cal-body { transition: opacity 0.2s; }
+#cal-body.is-busy { opacity: 0.55; }
+
+/* Couleur par niveau : du neutre (aucun / 0) au terracotta soutenu (3) */
+.lvl-none, .lvl-0 { --lv: var(--sage-300); --lv-tint: rgba(255, 252, 243, 0.62); }
+.cal-task.lvl-1, .dot.lvl-1 { --lv: #e9b872; --lv-tint: rgba(233, 184, 114, 0.16); }
+.cal-task.lvl-2, .dot.lvl-2 { --lv: #e8956a; --lv-tint: rgba(232, 149, 106, 0.17); }
+.cal-task.lvl-3, .dot.lvl-3 { --lv: #cf5a3a; --lv-tint: rgba(207, 90, 58, 0.14); }
+
+.cal-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.cal-task {
+  display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.8rem 0.8rem 0.8rem 1.1rem; border-radius: 1.25rem; background: var(--lv-tint, rgba(255, 252, 243, 0.62));
+  box-shadow: inset 5px 0 0 var(--lv, var(--sage-300)), var(--shadow-sm);
+}
+.cal-task-main { flex: 1; display: grid; gap: 0.25rem; min-width: 0; }
+.cal-task-main strong { font-family: var(--font-heading); font-weight: 500; color: var(--text-h); overflow-wrap: anywhere; }
+.cal-task-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: 0.9rem; overflow-wrap: anywhere; }
+.cal-task.is-done { opacity: 0.6; }
+.cal-task.is-done strong { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* Vue jour */
+.day-hero { display: flex; align-items: center; gap: 1rem; padding: 0.25rem 0.25rem 1rem; }
+.day-num { font-family: var(--font-heading); font-size: 3.4rem; font-weight: 600; line-height: 1; color: var(--text-h); }
+.day-info { display: grid; line-height: 1.25; }
+.day-info strong { font-size: 1.1rem; font-weight: 600; color: var(--text-h); }
+.day-info span { color: var(--sage-500); font-weight: 600; }
+.day-count { margin-left: auto; padding: 0.25rem 0.7rem; border-radius: 999px; background: var(--accent-soft); color: var(--sage-700); font-size: 0.8rem; font-weight: 700; }
+.day-count:empty { display: none; }
+
+/* Vue semaine : une ligne par jour */
+.week { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.week-day {
+  display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); gap: 0.75rem; align-items: start; padding: 0.6rem;
+  border-radius: 1.5rem; background: rgba(255, 252, 243, 0.62); box-shadow: var(--shadow);
+}
+.week-date {
+  display: grid; justify-items: center; align-content: center; gap: 0.05rem; min-height: 3.4rem; border: 0; border-radius: 1.1rem; cursor: pointer;
+  background: var(--tint); color: var(--sage-700); font: inherit; transition: transform 0.2s, background 0.2s;
+}
+.week-date span { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.week-date strong { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 600; line-height: 1.1; }
+.week-date:hover { transform: translateY(-1px); }
+.week-day.is-today .week-date { background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 18px -8px rgba(77, 93, 57, 0.8); }
+.week-tasks { min-width: 0; align-self: center; }
+.week-none { margin: 0; font-size: 0.85rem; color: var(--sage-500); }
+
+/* Vue mois */
+.month { padding: 0.8rem; border-radius: 1.5rem; background: rgba(255, 252, 243, 0.62); box-shadow: var(--shadow); }
+.month-head, .month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month-head { margin-bottom: 0.4rem; text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--sage-500); }
+.month-cell {
+  display: grid; grid-template-rows: auto 1fr; justify-items: center; gap: 0.15rem; aspect-ratio: 1; padding: 0.3rem 0.1rem; border: 0; border-radius: 0.9rem;
+  background: rgba(151, 169, 124, 0.14); font: inherit; color: var(--text); cursor: pointer; transition: transform 0.15s, background 0.2s;
+}
+.month-cell.is-busy { background: var(--sage-100); }
+.month-cell:hover { transform: scale(1.06); background: var(--sage-200); }
+.month-cell.is-today { box-shadow: 0 0 0 2px var(--accent); }
+.month-num { font-size: 0.85rem; font-weight: 700; color: var(--text-h); }
+.month-dots { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px; }
+.dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--lv, var(--sage-300)); }
+.month-dots small { font-size: 0.6rem; font-weight: 700; color: var(--sage-700); }
+.month-sum { margin: 0.75rem 0 0; text-align: center; font-size: 0.85rem; color: var(--sage-700); font-weight: 600; }
+
+/* Cloche de rappel : même langage que la pastille de validation (cercle simple, plein et vert une fois activé, sans relief) */
+.bell {
+  flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; margin-top: 0.1rem;
+  border-radius: 50%; border: 2px solid var(--sage-500); background: transparent; cursor: pointer;
+  color: var(--sage-500); transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.bell svg { width: 1rem; height: 1rem; }
+.bell:hover { border-color: var(--accent); color: var(--accent); }
+.bell.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.bell.is-on svg { animation: bell-ring 0.7s ease; transform-origin: 50% 10%; }
+@keyframes bell-ring { 0%, 100% { rotate: 0deg; } 20% { rotate: 16deg; } 40% { rotate: -14deg; } 60% { rotate: 9deg; } 80% { rotate: -6deg; } }
+@media (prefers-reduced-motion: reduce) { .bell.is-on svg { animation: none; } }

@@ -57,6 +57,21 @@ public class TaskService {
         return byKey.values().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
     }
 
+    /** Tâches à faire un jour donné pour lesquelles l'utilisateur a activé un rappel. */
+    @Transactional(readOnly = true)
+    public List<TaskResponse> findReminders(Long userId, LocalDate date) {
+        return search(userId, new TaskSearchCriteria(null, date, date, null, null, false)).stream()
+                .filter(TaskResponse::reminder)
+                .toList();
+    }
+
+    @Transactional
+    public TaskResponse setReminder(Long taskId, Long userId, boolean enabled) {
+        Tasks task = getOwnedTask(taskId, userId);
+        task.setReminder(enabled);
+        return TaskResponse.from(task);
+    }
+
     @Transactional(readOnly = true)
     public TaskResponse findById(Long taskId, Long userId) {
         return TaskResponse.from(getOwnedTask(taskId, userId));
