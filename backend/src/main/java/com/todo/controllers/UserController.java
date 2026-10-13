@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import com.todo.dto.PasswordUpdateRequest;
 import com.todo.dto.UserDto;
 import com.todo.dto.UserUpdateRequest;
 import com.todo.services.UserService;
@@ -29,6 +30,12 @@ public class UserController {
     @PutMapping
     public UserDto update(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody UserUpdateRequest request) {
         return userService.update(userId(jwt), request);
+    }
+
+    @PutMapping("/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updatePassword(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody PasswordUpdateRequest request) {
+        userService.updatePassword(userId(jwt), request);
     }
 
     @DeleteMapping

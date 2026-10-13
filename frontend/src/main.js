@@ -110,15 +110,19 @@ function logout() {
   location.hash = '#/login'
 }
 
+function setTitle(page) {
+  document.querySelector('#page-title').innerHTML = fill(pageTitleTpl, {
+    text: (page.title ?? greeting)(user.username),
+    icon: page.titleIcon ?? stars,
+  })
+}
+
 function pageView(path) {
   if (!document.querySelector('.page')) shellView()
 
   const index = PAGES.findIndex((p) => p.path === path)
   const page = PAGES[index]
-  document.querySelector('#page-title').innerHTML = fill(pageTitleTpl, {
-    text: (page.title ?? greeting)(user.username),
-    icon: page.titleIcon ?? stars,
-  })
+  setTitle(page)
   const dock = document.querySelector('.dock')
   dock.style.setProperty('--i', index)
   dock.querySelectorAll('a').forEach((link, i) => {
@@ -130,7 +134,15 @@ function pageView(path) {
   view.innerHTML = VIEWS[path]()
   if (path === '/menu') mountMenu(view.querySelector('.home'), user)
   if (path === '/stats') mountStats(view.querySelector('.home'))
-  if (path === '/settings') mountSettings(view.querySelector('.home'), user, logout)
+  if (path === '/settings') {
+    mountSettings(view.querySelector('.home'), user, {
+      onLogout: logout,
+      onProfile: (updated) => {
+        user = updated
+        setTitle(page)
+      },
+    })
+  }
 }
 
 function render() {

@@ -14,6 +14,16 @@ export const render = (template, data = {}) =>
       return raw ? String(value) : escapeHtml(value)
     })
 
+export function toast(message, isError = false) {
+  const el = document.createElement('div')
+  el.className = `toast${isError ? ' is-error' : ''}`
+  el.setAttribute('role', 'status')
+  el.textContent = message
+  document.body.appendChild(el)
+  setTimeout(() => el.classList.add('is-leaving'), 3000)
+  setTimeout(() => el.remove(), 3500)
+}
+
 export async function submitForm(form, action) {
   const button = form.querySelector('button[type="submit"]')
   const label = button.textContent

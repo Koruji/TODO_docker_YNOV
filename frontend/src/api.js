@@ -60,6 +60,7 @@ const MESSAGES = {
   'Username already taken': "Ce nom d'utilisateur est déjà pris.",
   'Email already used': 'Cet email est déjà utilisé.',
   'Validation failed': 'Merci de corriger les champs en erreur.',
+  'Current password is incorrect': 'Le mot de passe actuel est incorrect.',
   'endDate must not be before startDate': 'La date de fin ne peut pas précéder la date de début.',
 }
 
@@ -95,6 +96,18 @@ export const api = {
 
   me() {
     return request('/users/me', { auth: true })
+  },
+
+  // Met aussi à jour l'utilisateur gardé en session (le nom affiché dans l'en-tête en dépend)
+  async updateMe(body) {
+    const user = await request('/users/me', { method: 'PUT', body, auth: true })
+    const saved = session.get()
+    if (saved) session.set(saved.token, user)
+    return user
+  },
+
+  changePassword(body) {
+    return request('/users/me/password', { method: 'PUT', body, auth: true })
   },
 
   tasks() {

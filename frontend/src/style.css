@@ -556,3 +556,5 @@ a:hover { text-decoration: underline; }
 .btn-outline-danger { width: 100%; background: none; color: var(--danger); border-color: var(--danger); }
 .btn-outline-danger:hover { background: var(--danger); color: #fff; }
 .set-logout { align-self: center; width: 100%; max-width: 20rem; }
+.btn-cancel { background: none; color: var(--sage-700); padding-inline: 0.9rem; }
+.btn-cancel:hover { background: var(--accent-soft); }
