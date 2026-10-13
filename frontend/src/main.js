@@ -8,8 +8,6 @@ import barChartFill from 'bootstrap-icons/icons/bar-chart-fill.svg?raw'
 import calendar from 'bootstrap-icons/icons/calendar-week.svg?raw'
 import calendarFill from 'bootstrap-icons/icons/calendar-week-fill.svg?raw'
 import stars from 'bootstrap-icons/icons/stars.svg?raw'
-import personGear from 'bootstrap-icons/icons/person-gear.svg?raw'
-import graph from 'bootstrap-icons/icons/bar-chart-line.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
 import gearFill from 'bootstrap-icons/icons/gear-fill.svg?raw'
 import { api, session } from './api.js'
@@ -72,18 +70,18 @@ function registerView() {
   })
 }
 
-// title : texte de l'en-tête de la page (par défaut « Bonjour {nom} ! »), titleIcon : petite icône à sa suite
-const greeting = (name) => `Bonjour ${name} !`
+// title : texte de l'en-tête [avant, nom, après] (par défaut « Bonjour {nom} ! »), titleIcon : petite icône à sa suite (null = aucune)
+const greeting = (name) => ['Bonjour ', name, ' !']
 const PAGES = [
   { path: '/menu', label: 'Menu', icon: house, iconOn: houseFill },
   {
     path: '/stats', label: 'Statistiques', icon: barChart, iconOn: barChartFill,
-    title: (name) => `Envie d'avoir une vue d'ensemble ${name} ?`, titleIcon: graph,
+    title: (name) => ["Envie d'avoir une vue d'ensemble ", name, ' ?'], titleIcon: null,
   },
   { path: '/calendar', label: 'Calendrier', icon: calendar, iconOn: calendarFill },
   {
     path: '/settings', label: 'Paramètres', icon: gear, iconOn: gearFill,
-    title: (name) => `Besoin de modifier vos données personnelles, ${name} ?`, titleIcon: personGear,
+    title: (name) => ['Besoin de modifier vos données personnelles, ', name, ' ?'], titleIcon: null,
   },
 ]
 
@@ -108,9 +106,12 @@ function logout() {
 }
 
 function setTitle(page) {
+  const [before, name, after] = (page.title ?? greeting)(user.username)
   document.querySelector('#page-title').innerHTML = fill(pageTitleTpl, {
-    text: (page.title ?? greeting)(user.username),
-    icon: page.titleIcon ?? stars,
+    before,
+    name,
+    after,
+    icon: 'titleIcon' in page ? page.titleIcon : stars,
   })
 }
 

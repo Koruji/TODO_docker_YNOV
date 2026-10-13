@@ -160,10 +160,25 @@ a:hover { text-decoration: underline; }
 /* Page connectée */
 .page { display: flex; flex-direction: column; }
 
+/* En-tête : bandeau vert (même palette que le reste), texte aligné sur la colonne de contenu */
 .topbar {
-  display: flex; justify-content: center; text-align: center;
-  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 0.5rem max(1rem, env(safe-area-inset-left));
+  position: relative; isolation: isolate; overflow: hidden; flex: none;
+  padding: max(1.25rem, env(safe-area-inset-top)) 0 1.6rem;
+  color: var(--sage-100);
+  background: linear-gradient(135deg, var(--sage-700) 0%, var(--sage-600) 58%, var(--sage-500) 100%);
+  border-radius: 0 0 2rem 2rem;
+  box-shadow: 0 18px 32px -22px rgba(31, 41, 22, 0.6);
 }
+.topbar::before, .topbar::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; pointer-events: none; }
+.topbar::before { width: 15rem; height: 15rem; top: -8rem; right: -4rem; background: radial-gradient(circle, rgba(207, 225, 185, 0.32), transparent 68%); }
+.topbar::after { width: 11rem; height: 11rem; bottom: -6.5rem; left: -3rem; background: radial-gradient(circle, rgba(181, 201, 154, 0.28), transparent 68%); }
+.topbar-inner {
+  width: 100%; max-width: 36rem; margin: 0 auto; /* même largeur que le contenu des pages */
+  padding: 0 max(1.25rem, env(safe-area-inset-right)) 0 max(1.25rem, env(safe-area-inset-left));
+}
+.topbar h1 { color: var(--sage-100); font-size: clamp(1.3rem, 5.4vw, 1.75rem); font-weight: 500; line-height: 1.25; letter-spacing: 0.005em; text-align: left; }
+.topbar .title-name { color: #fff; font-weight: 700; }
+.topbar .title-icon { color: var(--sage-200); }
 .title-icon svg { width: 1em; height: 1em; vertical-align: -0.1em; }
 .topbar-user {
   display: flex; align-items: center; gap: 0.6rem; min-width: 0;
@@ -375,7 +390,7 @@ a:hover { text-decoration: underline; }
 .task.is-done .task-title, .task.is-done .task-desc { opacity: 0.7; }
 .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.15rem; }
 .chip {
-  display: inline-flex; align-items: center; gap: 0.35rem; max-width: 100%; padding: 0.2rem 0.6rem; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 0.35rem; max-width: 100%; padding: 0.2rem 0.6rem; border-radius: 0.85rem;
   background: rgba(207, 225, 185, 0.7); color: var(--sage-700); font-size: 0.8rem; font-weight: 600; overflow-wrap: anywhere;
 }
 .chip svg { width: 0.85rem; height: 0.85rem; flex: none; }
@@ -498,7 +513,7 @@ a:hover { text-decoration: underline; }
 .heat-scroll { overflow-x: auto; padding-bottom: 0.25rem; }
 .heat {
   --gap: 3px;
-  display: grid; gap: var(--gap); min-width: 18rem;
+  display: grid; gap: var(--gap);
   grid-template-columns: 1.7rem repeat(var(--weeks), minmax(0, 1fr));
   grid-template-rows: auto repeat(7, auto);
 }
@@ -663,3 +678,24 @@ a:hover { text-decoration: underline; }
 .bell.is-on svg { animation: bell-ring 0.7s ease; transform-origin: 50% 10%; }
 @keyframes bell-ring { 0%, 100% { rotate: 0deg; } 20% { rotate: 16deg; } 40% { rotate: -14deg; } 60% { rotate: 9deg; } 80% { rotate: -6deg; } }
 @media (prefers-reduced-motion: reduce) { .bell.is-on svg { animation: none; } }
+
+/* ---------- Petits écrans (320 à 384 px) ---------- */
+@media (max-width: 26rem) {
+  /* Calendrier, semaine : la pastille de date passe au-dessus des tâches au lieu de voler de la largeur */
+  .week-day { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+  .week-date { grid-auto-flow: column; justify-content: start; gap: 0.5rem; width: fit-content; min-height: 0; padding: 0.3rem 0.9rem; border-radius: 999px; }
+  .week-date strong { font-size: 1.1rem; }
+}
+@media (max-width: 24rem) {
+  /* Stats : toute la grille tient dans la carte, y compris les semaines les plus récentes */
+  .heat { --gap: 2px; grid-template-columns: 1.4rem repeat(var(--weeks), minmax(0, 1fr)); }
+  .heat-cell { border-radius: 3px; }
+  .heat-day { font-size: 0.62rem; }
+  .heat-month { font-size: 0.66rem; }
+
+  /* Paramètres : plus de place pour les textes */
+  .panel { padding: 0.8rem; }
+  .info-row { gap: 0.6rem; padding: 0.6rem 0.7rem; }
+  .info-ic { display: none; }
+  .info-label { letter-spacing: 0.03em; }
+}
