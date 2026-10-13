@@ -558,3 +558,5 @@ a:hover { text-decoration: underline; }
 .set-logout { align-self: center; width: 100%; max-width: 20rem; }
 .btn-cancel { background: none; color: var(--sage-700); padding-inline: 0.9rem; }
 .btn-cancel:hover { background: var(--accent-soft); }
+.confirm-text { margin: 0 0 1.25rem; }
+.sheet-actions .btn-danger { flex: 1; width: auto; min-width: 8rem; }

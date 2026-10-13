@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.todo.dto.DeleteAccountRequest;
 import com.todo.dto.PasswordUpdateRequest;
 import com.todo.dto.RegisterRequest;
 import com.todo.dto.UserDto;
@@ -77,8 +78,12 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(Long userId) {
-        usersRepository.delete(getUser(userId));
+    public void delete(Long userId, DeleteAccountRequest request) {
+        Users user = getUser(userId);
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+        usersRepository.delete(user);
     }
 
     private Users getUser(Long userId) {

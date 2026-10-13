@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import com.todo.dto.DeleteAccountRequest;
 import com.todo.dto.PasswordUpdateRequest;
 import com.todo.dto.UserDto;
 import com.todo.dto.UserUpdateRequest;
@@ -40,8 +41,8 @@ public class UserController {
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@AuthenticationPrincipal Jwt jwt) {
-        userService.delete(userId(jwt));
+    public void delete(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DeleteAccountRequest request) {
+        userService.delete(userId(jwt), request);
     }
 
     private Long userId(Jwt jwt) {

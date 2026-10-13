@@ -110,6 +110,10 @@ export const api = {
     return request('/users/me/password', { method: 'PUT', body, auth: true })
   },
 
+  deleteAccount(password) {
+    return request('/users/me', { method: 'DELETE', body: { password }, auth: true })
+  },
+
   tasks() {
     return request('/tasks', { auth: true })
   },
