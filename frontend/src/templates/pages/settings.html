@@ -1,6 +1,94 @@
-<main class="home">
-  <h1>Paramètres</h1>
-  <div class="settings">
-    <button id="logout" type="button" class="btn btn-danger">Se déconnecter</button>
-  </div>
-</main>
+<section class="panel" aria-labelledby="set-profile">
+  <header class="panel-head">
+    <span class="panel-ic" aria-hidden="true">{{{person}}}</span>
+    <h2 id="set-profile">Fiche perso</h2>
+  </header>
+
+  <ul class="info-list">
+    <li class="info-row">
+      <span class="info-ic" aria-hidden="true">{{{person}}}</span>
+      <span class="info-main">
+        <span class="info-label">Nom d'utilisateur</span>
+        <strong id="set-username">{{username}}</strong>
+      </span>
+      <button type="button" class="icon-btn" aria-label="Modifier le nom d'utilisateur">{{{pencil}}}</button>
+    </li>
+    <li class="info-row">
+      <span class="info-ic" aria-hidden="true">{{{envelope}}}</span>
+      <span class="info-main">
+        <span class="info-label">Adresse e-mail</span>
+        <strong id="set-email">…</strong>
+      </span>
+      <button type="button" class="icon-btn" aria-label="Modifier l'adresse e-mail">{{{pencil}}}</button>
+    </li>
+    <li class="info-row">
+      <span class="info-ic" aria-hidden="true">{{{key}}}</span>
+      <span class="info-main">
+        <span class="info-label">Mot de passe</span>
+        <strong>••••••••••</strong>
+      </span>
+      <button type="button" class="icon-btn" aria-label="Modifier le mot de passe">{{{pencil}}}</button>
+    </li>
+  </ul>
+</section>
+
+<section class="panel" aria-labelledby="set-data">
+  <header class="panel-head">
+    <span class="panel-ic" aria-hidden="true">{{{shield}}}</span>
+    <h2 id="set-data">Mes données</h2>
+  </header>
+
+  <ul class="info-list">
+    <li>
+      <button type="button" class="info-row info-link">
+        <span class="info-ic" aria-hidden="true">{{{download}}}</span>
+        <span class="info-main">
+          <strong>Télécharger toutes mes données</strong>
+          <span class="info-desc">Copie complète de ton compte (droit d'accès et de portabilité).</span>
+        </span>
+        <span class="info-go" aria-hidden="true">{{{chevron}}}</span>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="info-row info-link">
+        <span class="info-ic" aria-hidden="true">{{{sheet}}}</span>
+        <span class="info-main">
+          <strong>Exporter les données du mois en cours</strong>
+          <span class="info-desc">Excel complet ou résumé PDF.</span>
+        </span>
+        <span class="info-go" aria-hidden="true">{{{chevron}}}</span>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="info-row info-link">
+        <span class="info-ic" aria-hidden="true">{{{shield}}}</span>
+        <span class="info-main">
+          <strong>Comment mes données sont utilisées ?</strong>
+          <span class="info-desc">Finalités, durée de conservation, sous-traitants, hébergement en UE.</span>
+        </span>
+        <span class="info-go" aria-hidden="true">{{{chevron}}}</span>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="info-row info-link">
+        <span class="info-ic" aria-hidden="true">{{{chat}}}</span>
+        <span class="info-main">
+          <strong>Exercer un droit ou poser une question</strong>
+          <span class="info-desc">Contact du délégué à la protection des données. Réponse sous 1 mois.</span>
+        </span>
+        <span class="info-go" aria-hidden="true">{{{chevron}}}</span>
+      </button>
+    </li>
+  </ul>
+</section>
+
+<section class="panel panel-danger" aria-labelledby="set-danger">
+  <header class="panel-head">
+    <span class="panel-ic" aria-hidden="true">{{{trash}}}</span>
+    <h2 id="set-danger">Zone sensible</h2>
+  </header>
+  <p class="panel-note"><strong>Supprimer mon compte</strong> : effacement définitif de tes données après 30 jours.</p>
+  <button type="button" class="btn btn-outline-danger">Supprimer mon compte</button>
+</section>
+
+<button id="logout" type="button" class="btn btn-primary set-logout">Se déconnecter</button>
