@@ -2,7 +2,7 @@ import { api, session } from './api.js'
 
 // Rappels : le navigateur notifie, le matin, à midi et le soir, les tâches du jour dont la cloche est activée.
 // Limite : tant que l'application est ouverte dans un onglet ou une fenêtre (pas de notification en arrière-plan sans serveur push).
-export const SLOTS = [8, 13, 18]
+const SLOTS = [8, 13, 18]
 const GRACE_MINUTES = 30 // si l'appli s'ouvre un peu après l'heure, le rappel part quand même
 const CHECK_EVERY_MS = 30_000
 const LAST_KEY = 'todo:reminders:last'
@@ -85,6 +85,7 @@ const write = (value) => {
 }
 
 async function check() {
+  if (document.hidden) return // onglet en arrière-plan : on revérifie dès qu'il redevient visible
   const saved = session.get()
   if (!saved || !supported() || Notification.permission !== 'granted') return
   const now = new Date()

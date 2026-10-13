@@ -140,8 +140,7 @@ const filterSheetHtml = render(filterSheetTpl, {
 const openDialog = (d) => (d.showModal ? d.showModal() : d.setAttribute('open', ''))
 const closeDialog = (d) => (d.close ? d.close() : d.removeAttribute('open'))
 
-export function mountMenu(root, user) {
-  const name = user.username
+export function mountMenu(root) {
   root.classList.add('home-list')
   root.innerHTML = render(menuTpl, { ...icons, query, taskSheet: sheetHtml, filterSheet: filterSheetHtml })
 
