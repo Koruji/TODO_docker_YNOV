@@ -19,14 +19,13 @@ import authShellTpl from './templates/auth/auth-shell.html?raw'
 import fieldTpl from './templates/auth/field.html?raw'
 import loginFormTpl from './templates/auth/login-form.html?raw'
 import registerFormTpl from './templates/auth/register-form.html?raw'
-import emptyStateTpl from './templates/pages/empty-state.html?raw'
-import sectionTpl from './templates/pages/section.html?raw'
 import shellTpl from './templates/layout/shell.html?raw'
 import dockItemTpl from './templates/layout/dock-item.html?raw'
 import pageTitleTpl from './templates/layout/page-title.html?raw'
 import { mountMenu } from './tasks.js'
 import { mountStats } from './stats.js'
 import { mountSettings } from './settings.js'
+import { mountCalendar } from './calendar.js'
 
 let user = null
 
@@ -87,13 +86,10 @@ const PAGES = [
   },
 ]
 
-const section = (title, icon, text) =>
-  fill(sectionTpl, { title, empty: fill(emptyStateTpl, { icon, text }) })
-
 const VIEWS = {
   '/menu': () => '<main class="home"></main>',
   '/stats': () => '<main class="home"></main>',
-  '/calendar': () => section('Calendrier', calendar, 'Bientôt disponible'),
+  '/calendar': () => '<main class="home"></main>',
   '/settings': () => '<main class="home"></main>',
 }
 
@@ -134,6 +130,7 @@ function pageView(path) {
   view.innerHTML = VIEWS[path]()
   if (path === '/menu') mountMenu(view.querySelector('.home'), user)
   if (path === '/stats') mountStats(view.querySelector('.home'))
+  if (path === '/calendar') mountCalendar(view.querySelector('.home'))
   if (path === '/settings') {
     mountSettings(view.querySelector('.home'), user, {
       onLogout: logout,
