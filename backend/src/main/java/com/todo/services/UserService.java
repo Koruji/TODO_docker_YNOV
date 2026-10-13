@@ -1,9 +1,13 @@
 package com.todo.services;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.todo.dto.DeleteAccountRequest;
+import com.todo.dto.PasswordUpdateRequest;
 import com.todo.dto.RegisterRequest;
 import com.todo.dto.UserDto;
 import com.todo.dto.UserUpdateRequest;
@@ -64,8 +68,22 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(Long userId) {
-        usersRepository.delete(getUser(userId));
+    public void updatePassword(Long userId, PasswordUpdateRequest request) {
+        Users user = getUser(userId);
+        // 400 et non 401 : un 401 déconnecterait le frontend alors que la session est valide
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+    }
+
+    @Transactional
+    public void delete(Long userId, DeleteAccountRequest request) {
+        Users user = getUser(userId);
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+        usersRepository.delete(user);
     }
 
     private Users getUser(Long userId) {

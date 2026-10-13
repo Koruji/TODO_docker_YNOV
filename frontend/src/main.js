@@ -8,6 +8,7 @@ import barChartFill from 'bootstrap-icons/icons/bar-chart-fill.svg?raw'
 import calendar from 'bootstrap-icons/icons/calendar-week.svg?raw'
 import calendarFill from 'bootstrap-icons/icons/calendar-week-fill.svg?raw'
 import stars from 'bootstrap-icons/icons/stars.svg?raw'
+import personGear from 'bootstrap-icons/icons/person-gear.svg?raw'
 import graph from 'bootstrap-icons/icons/bar-chart-line.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
 import gearFill from 'bootstrap-icons/icons/gear-fill.svg?raw'
@@ -20,12 +21,12 @@ import loginFormTpl from './templates/auth/login-form.html?raw'
 import registerFormTpl from './templates/auth/register-form.html?raw'
 import emptyStateTpl from './templates/pages/empty-state.html?raw'
 import sectionTpl from './templates/pages/section.html?raw'
-import settingsTpl from './templates/pages/settings.html?raw'
 import shellTpl from './templates/layout/shell.html?raw'
 import dockItemTpl from './templates/layout/dock-item.html?raw'
 import pageTitleTpl from './templates/layout/page-title.html?raw'
 import { mountMenu } from './tasks.js'
 import { mountStats } from './stats.js'
+import { mountSettings } from './settings.js'
 
 let user = null
 
@@ -80,7 +81,10 @@ const PAGES = [
     title: (name) => `Envie d'avoir une vue d'ensemble ${name} ?`, titleIcon: graph,
   },
   { path: '/calendar', label: 'Calendrier', icon: calendar, iconOn: calendarFill },
-  { path: '/settings', label: 'Paramètres', icon: gear, iconOn: gearFill },
+  {
+    path: '/settings', label: 'Paramètres', icon: gear, iconOn: gearFill,
+    title: (name) => `Besoin de modifier vos données personnelles, ${name} ?`, titleIcon: personGear,
+  },
 ]
 
 const section = (title, icon, text) =>
@@ -90,7 +94,7 @@ const VIEWS = {
   '/menu': () => '<main class="home"></main>',
   '/stats': () => '<main class="home"></main>',
   '/calendar': () => section('Calendrier', calendar, 'Bientôt disponible'),
-  '/settings': () => settingsTpl,
+  '/settings': () => '<main class="home"></main>',
 }
 
 function shellView() {
@@ -106,15 +110,19 @@ function logout() {
   location.hash = '#/login'
 }
 
+function setTitle(page) {
+  document.querySelector('#page-title').innerHTML = fill(pageTitleTpl, {
+    text: (page.title ?? greeting)(user.username),
+    icon: page.titleIcon ?? stars,
+  })
+}
+
 function pageView(path) {
   if (!document.querySelector('.page')) shellView()
 
   const index = PAGES.findIndex((p) => p.path === path)
   const page = PAGES[index]
-  document.querySelector('#page-title').innerHTML = fill(pageTitleTpl, {
-    text: (page.title ?? greeting)(user.username),
-    icon: page.titleIcon ?? stars,
-  })
+  setTitle(page)
   const dock = document.querySelector('.dock')
   dock.style.setProperty('--i', index)
   dock.querySelectorAll('a').forEach((link, i) => {
@@ -126,7 +134,15 @@ function pageView(path) {
   view.innerHTML = VIEWS[path]()
   if (path === '/menu') mountMenu(view.querySelector('.home'), user)
   if (path === '/stats') mountStats(view.querySelector('.home'))
-  if (path === '/settings') view.querySelector('#logout').addEventListener('click', logout)
+  if (path === '/settings') {
+    mountSettings(view.querySelector('.home'), user, {
+      onLogout: logout,
+      onProfile: (updated) => {
+        user = updated
+        setTitle(page)
+      },
+    })
+  }
 }
 
 function render() {
