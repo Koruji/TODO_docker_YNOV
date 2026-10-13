@@ -26,6 +26,7 @@ import { mountMenu } from './tasks.js'
 import { mountStats } from './stats.js'
 import { mountSettings } from './settings.js'
 import { mountCalendar } from './calendar.js'
+import { startReminders } from './reminders.js'
 
 let user = null
 
@@ -188,3 +189,4 @@ async function boot() {
 }
 
 boot()
+startReminders()

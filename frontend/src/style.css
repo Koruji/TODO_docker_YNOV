@@ -599,10 +599,10 @@ a:hover { text-decoration: underline; }
 
 .cal-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
 .cal-task {
-  padding: 0.8rem 1rem 0.8rem 1.1rem; border-radius: 1.25rem; background: var(--lv-tint, rgba(255, 252, 243, 0.62));
+  display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.8rem 0.8rem 0.8rem 1.1rem; border-radius: 1.25rem; background: var(--lv-tint, rgba(255, 252, 243, 0.62));
   box-shadow: inset 5px 0 0 var(--lv, var(--sage-300)), var(--shadow-sm);
 }
-.cal-task-main { display: grid; gap: 0.25rem; min-width: 0; }
+.cal-task-main { flex: 1; display: grid; gap: 0.25rem; min-width: 0; }
 .cal-task-main strong { font-family: var(--font-heading); font-weight: 500; color: var(--text-h); overflow-wrap: anywhere; }
 .cal-task-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: 0.9rem; overflow-wrap: anywhere; }
 .cal-task.is-done { opacity: 0.6; }
@@ -650,3 +650,16 @@ a:hover { text-decoration: underline; }
 .dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--lv, var(--sage-300)); }
 .month-dots small { font-size: 0.6rem; font-weight: 700; color: var(--sage-700); }
 .month-sum { margin: 0.75rem 0 0; text-align: center; font-size: 0.85rem; color: var(--sage-700); font-weight: 600; }
+
+/* Cloche de rappel : même langage que la pastille de validation (cercle simple, plein et vert une fois activé, sans relief) */
+.bell {
+  flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; margin-top: 0.1rem;
+  border-radius: 50%; border: 2px solid var(--sage-500); background: transparent; cursor: pointer;
+  color: var(--sage-500); transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.bell svg { width: 1rem; height: 1rem; }
+.bell:hover { border-color: var(--accent); color: var(--accent); }
+.bell.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.bell.is-on svg { animation: bell-ring 0.7s ease; transform-origin: 50% 10%; }
+@keyframes bell-ring { 0%, 100% { rotate: 0deg; } 20% { rotate: 16deg; } 40% { rotate: -14deg; } 60% { rotate: 9deg; } 80% { rotate: -6deg; } }
+@media (prefers-reduced-motion: reduce) { .bell.is-on svg { animation: none; } }

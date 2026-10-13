@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import com.todo.dto.ReminderRequest;
 import com.todo.dto.TaskRequest;
 import com.todo.dto.TaskResponse;
 import com.todo.services.TaskService;
@@ -43,6 +44,12 @@ public class TaskController {
     public TaskResponse update(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody TaskRequest request) {
         return taskService.update(id, userId(jwt), request);
+    }
+
+    @PutMapping("/{id}/reminder")
+    public TaskResponse setReminder(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ReminderRequest request) {
+        return taskService.setReminder(id, userId(jwt), request.enabled());
     }
 
     @DeleteMapping("/{id}")

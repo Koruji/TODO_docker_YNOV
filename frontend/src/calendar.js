@@ -1,5 +1,6 @@
 import { api, messageFor } from './api.js'
 import { render, toast } from './utils.js'
+import { announceReminder, ensurePermission, slotsLabel } from './reminders.js'
 import calendarTpl from './templates/calendar/calendar.html?raw'
 import dayHeroTpl from './templates/calendar/day-hero.html?raw'
 import taskItemTpl from './templates/calendar/task-item.html?raw'
@@ -13,6 +14,8 @@ import next from 'bootstrap-icons/icons/chevron-right.svg?raw'
 import geoAlt from 'bootstrap-icons/icons/geo-alt.svg?raw'
 import speedometer from 'bootstrap-icons/icons/speedometer2.svg?raw'
 import checkCircle from 'bootstrap-icons/icons/check-circle.svg?raw'
+import bellIcon from 'bootstrap-icons/icons/bell.svg?raw'
+import bellFillIcon from 'bootstrap-icons/icons/bell-fill.svg?raw'
 import calendarEvent from 'bootstrap-icons/icons/calendar-event.svg?raw'
 
 const VIEWS = ['day', 'week', 'month']
@@ -70,8 +73,13 @@ function taskItem(t, { detailed }) {
   if (t.level > 0) chips.push(chip(speedometer, `Niveau ${t.level}`, `level lvl-${t.level}`))
   if (t.done) chips.push(chip(checkCircle, 'Réalisée', 'ontime'))
   return render(taskItemTpl, {
+    id: t.id,
     level: t.level ?? 'none',
     done: t.done,
+    remindable: !t.done, // pas de rappel pour une tâche déjà réalisée
+    reminder: t.reminder,
+    bell: decorative(t.reminder ? bellFillIcon : bellIcon),
+    bellLabel: `${t.reminder ? 'Désactiver' : 'Activer'} le rappel : ${t.label}`,
     label: t.label,
     description: detailed ? t.description : '',
     chips: chips.join(''),
@@ -194,6 +202,24 @@ export function mountCalendar(root) {
     renderAll()
   }
 
+  // Cloche : enregistre le rappel sur la tâche. À l'activation, une notification part tout de suite (test) ;
+  // ensuite le planificateur (reminders.js) rappellera la tâche à 8 h, 13 h et 18 h le jour J.
+  async function toggleReminder(id) {
+    const task = tasks.find((t) => t.id === id)
+    if (!task) return
+    const enable = !task.reminder
+    const permission = enable ? await ensurePermission() : null // doit être demandé pendant le clic
+    try {
+      Object.assign(task, await api.setReminder(id, enable))
+    } catch (err) {
+      return toast(messageFor(err), true)
+    }
+    renderAll()
+    if (!enable) return toast('Rappel désactivé')
+    if (permission === 'granted' && announceReminder(task)) return toast(`Rappel activé : ${slotsLabel()}`)
+    toast(`Rappel enregistré, mais les notifications sont bloquées ou indisponibles dans ce navigateur`, true)
+  }
+
   function go(next) {
     view = next.view ?? view
     cursor = next.cursor ?? cursor
@@ -204,7 +230,8 @@ export function mountCalendar(root) {
   root.addEventListener('click', (e) => {
     const button = e.target.closest('button')
     if (!button) return
-    if (button.dataset.view) go({ view: button.dataset.view })
+    if (button.dataset.bell) toggleReminder(Number(button.dataset.bell))
+    else if (button.dataset.view) go({ view: button.dataset.view })
     else if (button.dataset.nav) {
       const n = Number(button.dataset.nav)
       go({ cursor: view === 'day' ? addDays(cursor, n) : view === 'week' ? addDays(cursor, 7 * n) : addMonths(cursor, n) })

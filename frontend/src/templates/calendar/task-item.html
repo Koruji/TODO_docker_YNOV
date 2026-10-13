@@ -4,4 +4,7 @@
     {{#description}}<span class="cal-task-desc">{{description}}</span>{{/description}}
     {{#chips}}<span class="task-meta">{{{chips}}}</span>{{/chips}}
   </div>
+  {{#remindable}}
+  <button type="button" class="bell{{#reminder}} is-on{{/reminder}}" data-bell="{{id}}" aria-pressed="{{reminder}}" aria-label="{{bellLabel}}">{{{bell}}}</button>
+  {{/remindable}}
 </li>
