@@ -8,8 +8,6 @@ import barChartFill from 'bootstrap-icons/icons/bar-chart-fill.svg?raw'
 import calendar from 'bootstrap-icons/icons/calendar-week.svg?raw'
 import calendarFill from 'bootstrap-icons/icons/calendar-week-fill.svg?raw'
 import stars from 'bootstrap-icons/icons/stars.svg?raw'
-import personGear from 'bootstrap-icons/icons/person-gear.svg?raw'
-import graph from 'bootstrap-icons/icons/bar-chart-line.svg?raw'
 import gear from 'bootstrap-icons/icons/gear.svg?raw'
 import gearFill from 'bootstrap-icons/icons/gear-fill.svg?raw'
 import { api, session } from './api.js'
@@ -22,6 +20,7 @@ import registerFormTpl from './templates/auth/register-form.html?raw'
 import shellTpl from './templates/layout/shell.html?raw'
 import dockItemTpl from './templates/layout/dock-item.html?raw'
 import pageTitleTpl from './templates/layout/page-title.html?raw'
+import mascotTpl from './templates/layout/mascot.html?raw'
 import { mountMenu } from './tasks.js'
 import { mountStats } from './stats.js'
 import { mountSettings } from './settings.js'
@@ -72,18 +71,21 @@ function registerView() {
   })
 }
 
-// title : texte de l'en-tête de la page (par défaut « Bonjour {nom} ! »), titleIcon : petite icône à sa suite
-const greeting = (name) => `Bonjour ${name} !`
+// title : texte de l'en-tête [avant, nom, après] (par défaut « Bonjour {nom} ! »), titleIcon : petite icône à sa suite (null = aucune)
+const greeting = (name) => ['Bonjour ', name, ' !']
 const PAGES = [
-  { path: '/menu', label: 'Menu', icon: house, iconOn: houseFill },
+  { path: '/menu', label: 'Menu', icon: house, iconOn: houseFill, mascot: true }, // mascot : la mascotte s'affiche à droite de l'en-tête
   {
     path: '/stats', label: 'Statistiques', icon: barChart, iconOn: barChartFill,
-    title: (name) => `Envie d'avoir une vue d'ensemble ${name} ?`, titleIcon: graph,
+    title: (name) => ["Envie d'avoir une vue d'ensemble ", name, ' ?'], titleIcon: null,
   },
-  { path: '/calendar', label: 'Calendrier', icon: calendar, iconOn: calendarFill },
+  {
+    path: '/calendar', label: 'Calendrier', icon: calendar, iconOn: calendarFill,
+    title: (name) => ['Ne perdez pas le fil de vos tâches, ', name, ' !'],
+  },
   {
     path: '/settings', label: 'Paramètres', icon: gear, iconOn: gearFill,
-    title: (name) => `Besoin de modifier vos données personnelles, ${name} ?`, titleIcon: personGear,
+    title: (name) => ['Besoin de modifier vos données personnelles, ', name, ' ?'], titleIcon: null,
   },
 ]
 
@@ -108,10 +110,15 @@ function logout() {
 }
 
 function setTitle(page) {
+  const [before, name, after] = (page.title ?? greeting)(user.username)
   document.querySelector('#page-title').innerHTML = fill(pageTitleTpl, {
-    text: (page.title ?? greeting)(user.username),
-    icon: page.titleIcon ?? stars,
+    before,
+    name,
+    after,
+    icon: 'titleIcon' in page ? page.titleIcon : stars,
   })
+  document.querySelector('.topbar').classList.toggle('has-mascot', !!page.mascot)
+  document.querySelector('#header-mascot').innerHTML = page.mascot ? mascotTpl : ''
 }
 
 function pageView(path) {
@@ -129,7 +136,7 @@ function pageView(path) {
 
   const view = document.querySelector('#view')
   view.innerHTML = VIEWS[path]()
-  if (path === '/menu') mountMenu(view.querySelector('.home'), user)
+  if (path === '/menu') mountMenu(view.querySelector('.home'))
   if (path === '/stats') mountStats(view.querySelector('.home'))
   if (path === '/calendar') mountCalendar(view.querySelector('.home'))
   if (path === '/settings') {
@@ -153,19 +160,6 @@ function render() {
   }
   if (user) return void (location.hash = '#/menu')
   return route === '/register' ? registerView() : loginView()
-}
-
-if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-  let frame = 0
-  window.addEventListener('pointermove', (e) => {
-    if (frame || e.pointerType === 'touch') return
-    frame = requestAnimationFrame(() => {
-      frame = 0
-      const root = document.documentElement.style
-      root.setProperty('--px', `${(e.clientX / innerWidth - 0.5) * -24}px`)
-      root.setProperty('--py', `${(e.clientY / innerHeight - 0.5) * -24}px`)
-    })
-  })
 }
 
 window.addEventListener('session-expired', () => {
