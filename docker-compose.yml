@@ -12,6 +12,20 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-
+  backend:
+    # Mise en place de l'environnement avec les variables (nécessite un .env)
+    build: ./backend
+    environment:
+      - DB_HOST=db
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    # lancement du backend à condition que le service db soit up
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
 volumes:
   todo-data:
