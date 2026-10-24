@@ -1,0 +1,19 @@
+<section class="cal" aria-label="Calendrier des tâches">
+  <div class="cal-seg" role="tablist" aria-label="Période affichée">
+    <span class="cal-seg-indicator" aria-hidden="true"></span>
+    <button type="button" role="tab" data-view="day">Jour</button>
+    <button type="button" role="tab" data-view="week">Semaine</button>
+    <button type="button" role="tab" data-view="month">Mois</button>
+  </div>
+
+  <header class="cal-nav">
+    <button type="button" class="icon-btn" data-nav="-1" aria-label="Précédent">{{{prev}}}</button>
+    <div class="cal-title">
+      <strong id="cal-label"></strong>
+      <button type="button" class="cal-today" data-today>Aujourd'hui</button>
+    </div>
+    <button type="button" class="icon-btn" data-nav="1" aria-label="Suivant">{{{next}}}</button>
+  </header>
+
+  <div id="cal-body" aria-live="polite"></div>
+</section>

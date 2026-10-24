@@ -1,0 +1,15 @@
+<dialog class="sheet" id="confirm-sheet" aria-labelledby="confirm-title">
+  <div class="sheet-panel">
+    <header class="sheet-head">
+      <h2 id="confirm-title">Supprimer ton compte ?</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Fermer">{{{close}}}</button>
+    </header>
+
+    <p class="confirm-text">Ton compte et toutes tes tâches seront <strong>effacés définitivement</strong>. Cette action est irréversible.</p>
+
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-cancel" data-close>Non, garder mon compte</button>
+      <button type="button" class="btn btn-danger" id="confirm-delete">Oui, continuer</button>
+    </div>
+  </div>
+</dialog>

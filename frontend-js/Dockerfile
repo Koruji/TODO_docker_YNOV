@@ -9,10 +9,11 @@ RUN npm ci
 
 # Copie du code source
 COPY . .
+# Vérification et construction du site 
+RUN npm run build
 
 # --- LANCEMENT APP --- #
 # Nouvelle image pour le serveur et lancement du front
-RUN npm run build
 FROM nginx:alpine
 # Récupération du site dans le process build
 COPY --from=build /app/dist /usr/share/nginx/html

@@ -1,0 +1,10 @@
+<li class="week-day{{#today}} is-today{{/today}}">
+  <button type="button" class="week-date" data-day="{{day}}" aria-label="Voir le {{label}}">
+    <span>{{weekday}}</span>
+    <strong>{{num}}</strong>
+  </button>
+  <div class="week-tasks">
+    {{#tasks}}<ul class="cal-tasks">{{{tasks}}}</ul>{{/tasks}}
+    {{#none}}<p class="week-none">Rien de prévu</p>{{/none}}
+  </div>
+</li>
