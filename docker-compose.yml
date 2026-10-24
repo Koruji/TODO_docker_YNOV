@@ -27,12 +27,11 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
-  frontend-js:
-    build: ./frontend-js
+  frontend:
+    build: ./frontend-ts # Ecrire ./frontend-js pour passer sur le front javascript
     ports:
       - "5173:80"
     depends_on:
       - backend
-      
 volumes:
   todo-data:
