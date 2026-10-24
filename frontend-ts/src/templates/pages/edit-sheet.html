@@ -1,0 +1,17 @@
+<dialog class="sheet" id="edit-sheet" aria-labelledby="edit-title">
+  <div class="sheet-panel">
+    <header class="sheet-head">
+      <h2 id="edit-title"></h2>
+      <button type="button" class="icon-btn" data-close aria-label="Fermer">{{{close}}}</button>
+    </header>
+
+    <form id="edit-form" class="form" novalidate>
+      <div class="alert" role="alert" hidden></div>
+      <div id="edit-fields" class="form"></div>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-cancel" data-close>Annuler</button>
+        <button type="submit" class="btn btn-primary" id="edit-submit">Valider la modification</button>
+      </div>
+    </form>
+  </div>
+</dialog>

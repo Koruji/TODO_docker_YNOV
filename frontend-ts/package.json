@@ -1,0 +1,21 @@
+{
+  "name": "frontend-ts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/lexend": "^5.3.0",
+    "@fontsource-variable/nunito-sans": "^5.3.0",
+    "bootstrap-icons": "^1.13.1"
+  }
+}

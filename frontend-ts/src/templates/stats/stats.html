@@ -1,0 +1,20 @@
+<section class="stat-card" aria-labelledby="stat-title">
+  <header class="stat-head">
+    <h2 id="stat-title">4 derniers mois</h2>
+    <div class="stat-tabs" role="tablist" aria-label="Type d'activité">
+      <button type="button" role="tab" data-metric="all" aria-selected="true">Tout</button>
+      <button type="button" role="tab" data-metric="created" aria-selected="false">Créées</button>
+      <button type="button" role="tab" data-metric="done" aria-selected="false">Réalisées</button>
+    </div>
+  </header>
+
+  <div id="heatmap" class="heat-scroll"></div>
+
+  <footer class="heat-legend" aria-hidden="true">
+    <span>Moins</span>
+    <i class="heat-cell lvl-0"></i><i class="heat-cell lvl-1"></i><i class="heat-cell lvl-2"></i><i class="heat-cell lvl-3"></i><i class="heat-cell lvl-4"></i>
+    <span>Plus</span>
+  </footer>
+</section>
+
+<div class="stat-tiles" id="stat-tiles"></div>
