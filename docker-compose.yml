@@ -43,6 +43,20 @@ services:
       - backend
     networks:
       - todo-network
+  
+  backend-tests:
+    build:
+      context: ./backend
+      target: test
+    # Profiles empêche aux services de démarrer avec docker compose up seul
+    # Nécessite un docker compose --profile test run --rm nom_service
+    profiles: ["test"]
+
+  frontend-tests:
+    build:
+      context: ./frontend-js
+      target: test
+    profiles: ["test"]
 
 # Spécification du réseau
 networks:

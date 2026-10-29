@@ -16,6 +16,10 @@ COPY src ./src
 #  Construction du .jar sans exécution des tests en mode batch
 RUN mvn -B -DskipTests package
 
+# --- TESTS --- #
+FROM build AS test
+CMD ["mvn", "-B", "test", "-Dtest=!BackendApplicationTests"]
+
 # --- LANCEMENT APP --- #
 # Image JAVA 25 finale en exécution seulement
 FROM eclipse-temurin:${JAVA_VERSION}-jre

@@ -14,6 +14,10 @@ COPY . .
 # Vérification et construction du site 
 RUN npm run build
 
+# --- TESTS --- #
+FROM build AS test
+CMD ["npm", "test"]
+
 # --- LANCEMENT APP --- #
 # Nouvelle image pour le serveur et lancement du front(version non privilégié)
 FROM nginxinc/nginx-unprivileged:alpine
