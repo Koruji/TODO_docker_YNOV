@@ -5,13 +5,18 @@ services:
     env_file: .env
     ports:
       - "5432:5432"
+    # Monte le volume dans le dossier où Postgres stocke ses données (persistance des données)
     volumes:
       - todo-data:/var/lib/postgresql/data
+    # Vérification de si le service est ready (depend_on du backend)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - todo-network
+
   backend:
     # Mise en place de l'environnement avec les variables (nécessite un .env)
     build: ./backend
@@ -27,11 +32,23 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+    networks:
+      - todo-network
+
   frontend:
-    build: ./frontend-ts # Ecrire ./frontend-js pour passer sur le front javascript
+    build: ./frontend-js # Ecrire ./frontend-js pour passer sur le front javascript
     ports:
-      - "5173:80"
+      - "5173:8080"
     depends_on:
       - backend
+    networks:
+      - todo-network
+
+# Spécification du réseau
+networks:
+  todo-network:
+    driver: bridge
+
+# Déclaration du volume todo-data
 volumes:
   todo-data:
