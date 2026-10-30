@@ -17,6 +17,8 @@ Application de gestion de tâches : une API Spring Boot, une base PostgreSQL et 
 - [Tests](#tests)
 - [API](#api)
 - [Déploiement](#déploiement)
+- [Liens](#liens)
+- [Auteur](#auteur)
 
 ## Stack
 
@@ -173,3 +175,12 @@ Variables d'environnement du backend :
 Le frontend lit `VITE_API_URL` au moment du build : après modification, il faut le redéployer. L'URL du backend doit être en HTTPS.
 
 Sur le plan gratuit de Render, le backend s'endort après 15 minutes d'inactivité et met environ une minute à se réveiller.
+
+## Liens
+
+- Dépôt GitHub : https://github.com/Koruji/TODO_docker_YNOV
+- Application déployée (Vercel) : https://todo-docker-ynov-rnuor9aag-korujis-projects.vercel.app
+
+## Auteur
+
+COTTIN Jade
